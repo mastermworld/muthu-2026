@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import surveyRoutes from './routes/survey.routes';
-import idCardRoutes from './routes/idcard.routes';
 import locationRoutes from './routes/location.routes';
 import feedbackRoutes from './routes/feedback.routes';
 import logger from './utils/logger';
@@ -44,7 +43,6 @@ app.post('/api/upload', upload.single('organizationLogo'), (req: express.Request
 // API Routes
 // All routes defined in survey.routes.ts will be prefixed with /api
 app.use('/api', surveyRoutes);
-app.use('/api/idcard', idCardRoutes);
 app.use('/api', locationRoutes);
 app.use('/api', feedbackRoutes);
 

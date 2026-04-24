@@ -8,7 +8,6 @@ import Home from "./pages/Home";
 import SurveyForm from "./pages/SurveyForm";
 import IDCardGenerator from "./pages/IDCardGenerator";
 import UserIDCardPage from "./pages/UserIDCardPage";
-import IDCardTemplateManager from "./pages/IDCardTemplateManager";
 import DonationPage from "./pages/DonationPage"; // Import DonationPage
 import MutharaiyarPage from "./pages/MutharaiyarPage";
 import ServicesPage from "./pages/ServicesPage";
@@ -44,7 +43,7 @@ function App() {
                 <Route path="/idcards" element={<Navigate to="/idcards/generate" replace />} />
                 <Route path="/idcards/generate" element={<IDCardGenerator />} />
                 <Route path="/idcards/user" element={<UserIDCardPage />} />
-                <Route path="/idcards/templates" element={<IDCardTemplateManager />} />
+                <Route path="/idcards/templates" element={<Navigate to="/idcards/generate" replace />} />
                 <Route path="/donation" element={<DonationPage />} />
                 <Route path="/mutharaiyar" element={<MutharaiyarPage />} />
                 <Route path="/services" element={<ServicesPage />} />

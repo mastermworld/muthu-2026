@@ -53,39 +53,6 @@ model Survey {
   @@index([villageId])
 }
 
-model IDCardTemplate {
-  id                Int      @id @default(autoincrement())
-
-  name              String?
-  description       String?  @db.Text
-
-  organizationTitle String
-  organizationLogo  String?  @db.Text
-
-  style             String   @default("modern")
-  layout            String   @default("horizontal")
-
-  primaryColor      String   @default("#1e40af")
-  secondaryColor    String   @default("#3b82f6")
-  accentColor       String   @default("#60a5fa")
-  textColor         String   @default("#ffffff")
-
-  fontFamily        String   @default("Inter")
-
-  bgPattern         String?  @db.Text
-
-  showQR            Boolean  @default(true)
-  qrPosition        String   @default("right")
-
-  showFields        Json
-
-  isActive          Boolean  @default(false)
-  isDefault         Boolean  @default(false)
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
 model Country {
   id        Int      @id @default(autoincrement())
   value     String   @unique

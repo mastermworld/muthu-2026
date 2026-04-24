@@ -107,7 +107,6 @@ async function main() {
   console.log('Starting seed...');
 
   await prisma.survey.deleteMany({});
-  await prisma.iDCardTemplate.deleteMany({});
 
   console.log('Generating 100 users...');
 
@@ -152,34 +151,8 @@ async function main() {
     if ((i + 1) % 25 === 0) console.log(`  ${i + 1}/100 users created`);
   }
 
-  await prisma.iDCardTemplate.create({
-    data: {
-      name: 'Default Mutharaiyar Template',
-      description: 'Default ID card template for Mutharaiyar community members',
-      organizationTitle: 'Mutharaiyar Community',
-      organizationLogo: '/mutharaiyar-logo.png',
-      style: 'modern',
-      layout: 'horizontal',
-      primaryColor: '#ff6b35',
-      secondaryColor: '#f7931e',
-      accentColor: '#dc2626',
-      textColor: '#ffffff',
-      fontFamily: 'Inter',
-      showQR: true,
-      qrPosition: 'right',
-      showFields: {
-        photo: true, name: true, memberId: true, jobTitle: true,
-        department: false, email: true, phone: true, address: true,
-        bloodGroup: false, emergencyContact: false, validFrom: true,
-        validUntil: false, signature: false,
-      },
-      isActive: true,
-      isDefault: true,
-    },
-  });
-
   const total = await prisma.survey.count();
-  console.log(`\nDone! ${total} users + 1 template seeded.`);
+  console.log(`\nDone! ${total} users seeded.`);
 }
 
 main()

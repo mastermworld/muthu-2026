@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Survey {
+  id              Int      @id @default(autoincrement())
+  profilePicture  String   @db.Text
+
+  fullName        String
+  gender          String
+  mobile          String   @unique
+  mobileAreaCode  String?  @default("+91")
+  email           String   @unique
+  birthdate       String
+  maritalStatus   String
+
+  economicStatus       String?
+  physicallyChallenged String?  @default("no")
+  orphan               String?  @default("no")
+  volunteering         String?
+
+  countryId       Int?
+  country         Country? @relation(fields: [countryId], references: [id])
+  stateId         Int?
+  state           State?   @relation(fields: [stateId], references: [id])
+  districtId      Int?
+  district        District? @relation(fields: [districtId], references: [id])
+  talukId         Int?
+  taluk           Taluk?   @relation(fields: [talukId], references: [id])
+  villageId       Int?
+  village         Village? @relation(fields: [villageId], references: [id])
+
+  address         String   @db.Text
+
+  education       String
+  jobType         String
+  jobDescription  String   @db.Text
+
+  bloodGroup      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([countryId])
+  @@index([stateId])
+  @@index([districtId])
+  @@index([talukId])
+  @@index([villageId])
+}
+
+model IDCardTemplate {
+  id                Int      @id @default(autoincrement())
+
+  name              String?
+  description       String?  @db.Text
+
+  organizationTitle String
+  organizationLogo  String?  @db.Text
+
+  style             String   @default("modern")
+  layout            String   @default("horizontal")
+
+  primaryColor      String   @default("#1e40af")
+  secondaryColor    String   @default("#3b82f6")
+  accentColor       String   @default("#60a5fa")
+  textColor         String   @default("#ffffff")
+
+  fontFamily        String   @default("Inter")
+
+  bgPattern         String?  @db.Text
+
+  showQR            Boolean  @default(true)
+  qrPosition        String   @default("right")
+
+  showFields        Json
+
+  isActive          Boolean  @default(false)
+  isDefault         Boolean  @default(false)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Country {
+  id        Int      @id @default(autoincrement())
+  value     String   @unique
+  label     String
+  name      String
+
+  states    State[]
+  surveys   Survey[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model State {
+  id        Int      @id @default(autoincrement())
+  value     String   @unique
+  label     String
+  name      String
+
+  countryId Int
+  country   Country  @relation(fields: [countryId], references: [id])
+  districts District[]
+  surveys   Survey[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([countryId])
+}
+
+model District {
+  id        Int      @id @default(autoincrement())
+  value     String   @unique
+  label     String
+  name      String
+
+  stateId   Int
+  state     State    @relation(fields: [stateId], references: [id])
+  taluks    Taluk[]
+  surveys   Survey[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stateId])
+}
+
+model Taluk {
+  id         Int      @id @default(autoincrement())
+  value      String   @unique
+  label      String
+  name       String
+
+  districtId Int
+  district   District @relation(fields: [districtId], references: [id])
+  villages   Village[]
+  surveys    Survey[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([districtId])
+}
+
+model Village {
+  id        Int      @id @default(autoincrement())
+  value     String   @unique
+  label     String
+  name      String
+
+  talukId   Int
+  taluk     Taluk    @relation(fields: [talukId], references: [id])
+  surveys   Survey[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([talukId])
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  category  String
+  rating    Int
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+}

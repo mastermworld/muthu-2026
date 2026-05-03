@@ -228,7 +228,7 @@ export default function ImageUpload({ label, error, onChange, value }: ImageUplo
 
   return (
     <div className="mb-6">
-      <label className="block text-neutral-800 font-semibold mb-3 text-lg">{label}</label>
+      <label className=" flex items-center justify-center block text-neutral-800 font-semibold mb-3 text-lg left-10">{label}</label>
 
       {/* ── Camera Modal ──────────────────────────────────────────── */}
       {isCameraOpen && (
@@ -376,12 +376,12 @@ export default function ImageUpload({ label, error, onChange, value }: ImageUplo
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center">
-              <div className="relative mx-auto mb-4">
+            <div className="p-4 text-center">
+              <div className="relative flex mx-auto mb-4 items-center justify-center">
                 <div className="w-24 h-24 bg-gradient-to-br from-primary-400 via-secondary-400 to-accent-400 rounded-2xl flex items-center justify-center shadow-lg">
                   <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center">{isDragOver ? <Upload className="w-10 h-10 text-primary-500" /> : <User className="w-10 h-10 text-neutral-400" />}</div>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-secondary-400 rounded-full flex items-center justify-center"><Camera className="w-4 h-4 text-white" /></div>
+                
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-neutral-800">{isDragOver ? 'Drop your image here!' : 'Upload Picture'}</h3>

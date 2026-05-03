@@ -508,21 +508,30 @@ export default function SurveyForm() {
           {/* ── Section 1: Profile Photo ─────────────────────────────── */}
           <h1 className="text-2xl sm:text-3xl font-display font-bold bg-gradient-to-r from-orange-600 via-yellow-600 to-red-600 bg-clip-text text-transparent mb-3 text-center">{t("registrationForm")}</h1>
           <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 md:p-8">
-           
-            <div className="flex justify-center">
-              <div className="w-full max-w-xs">
-                <Controller
-                  name="profilePicture"
-                  control={control}
-                  render={({ field: { onChange, value } }) => (
-                    <ImageUpload
-                      label={t("profilePicture")}
-                      error={errors.profilePicture}
-                      onChange={onChange}
-                      value={value || null}
-                    />
-                  )}
+            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+              <div className="flex justify-center md:justify-start shrink-0">
+                <img
+                  src="/footer_logo.png"
+                  alt={language === "tamil" ? "முத்தரையர் கிளப் சின்னம்" : "Mutharaiyar Club logo"}
+                  className="w-40 h-40 sm:w-48 sm:h-48 md:w-52 md:h-52 object-contain select-none"
+                  draggable={false}
                 />
+              </div>
+              <div className="flex-1 flex justify-center min-w-0">
+                <div className="w-full max-w-xs">
+                  <Controller
+                    name="profilePicture"
+                    control={control}
+                    render={({ field: { onChange, value } }) => (
+                      <ImageUpload
+                        label={t("profilePicture")}
+                        error={errors.profilePicture}
+                        onChange={onChange}
+                        value={value || null}
+                      />
+                    )}
+                  />
+                </div>
               </div>
             </div>
           </div>

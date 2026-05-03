@@ -316,9 +316,7 @@ export default function ImageUploadField({
                     )}
                   </div>
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-secondary-400 to-accent-400 rounded-full flex items-center justify-center shadow-lg">
-                  <Camera className="w-4 h-4 text-white" />
-                </div>
+            
               </div>
               
               <div className="space-y-3">

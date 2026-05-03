@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, Shield, CheckCircle, Phone, Mail, User, QrCode, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../components/layout/Navbar';
+import { API_URL } from '../config/api';
 
 interface DonationFormData {
   fullName: string;
@@ -17,6 +18,7 @@ const DonationPage: React.FC = () => {
   });
   const [showQR, setShowQR] = useState(false);
   const [errors, setErrors] = useState<Partial<DonationFormData>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const upiId = "mastermworld-4@oksbi";
 
@@ -58,9 +60,24 @@ const DonationPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
+    if (!validateForm()) return;
+    setIsSubmitting(true);
+    try {
+      await fetch(`${API_URL}/api/donation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          donorName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+        }),
+      });
+    } catch {
+      // Non-blocking: show QR even if network fails
+    } finally {
+      setIsSubmitting(false);
       setShowQR(true);
     }
   };
@@ -323,9 +340,12 @@ const DonationPage: React.FC = () => {
             <div className="flex justify-center pt-4">
               <button
                 type="submit"
-                className="w-full max-w-md py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all duration-300 shadow-lg hover:shadow-xl"
+                disabled={isSubmitting}
+                className="w-full max-w-md py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-bold hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-60"
               >
-                {language === 'tamil' ? 'நன்கொடை QR குறியீட்டைப் பெறவும்' : 'Get Donation QR Code'}
+                {isSubmitting
+                  ? (language === 'tamil' ? 'சமர்ப்பிக்கிறது...' : 'Submitting...')
+                  : (language === 'tamil' ? 'நன்கொடை QR குறியீட்டைப் பெறவும்' : 'Get Donation QR Code')}
               </button>
           </div>
           </form>

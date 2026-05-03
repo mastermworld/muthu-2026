@@ -1,18 +1,27 @@
-import { PrismaClient, Survey } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+// postalCode support added
 
-type SurveyCreateInput = Omit<Survey, 'id' | 'createdAt' | 'updatedAt'>;
 
-export const createSurvey = async (surveyData: SurveyCreateInput): Promise<Survey> => {
-  return prisma.survey.create({ data: surveyData });
+export const findSurveyByMobileOrEmail = async (mobile: string, email: string, altMobile?: string) => {
+  const orConditions: object[] = [{ mobile }, { email }];
+  if (altMobile) orConditions.push({ altMobile });
+  return prisma.survey.findFirst({
+    where: { OR: orConditions },
+    select: { id: true, mobile: true, email: true, altMobile: true },
+  });
 };
 
-export const getAllSurveys = async (): Promise<Survey[]> => {
+export const createSurvey = async (surveyData: Record<string, unknown>) => {
+  return prisma.survey.create({ data: surveyData as any });
+};
+
+export const getAllSurveys = async () => {
   return prisma.survey.findMany({ orderBy: { createdAt: 'desc' } });
 };
 
-export const getSurveyById = async (id: number): Promise<Survey | null> => {
+export const getSurveyById = async (id: number) => {
   return prisma.survey.findUnique({ where: { id } });
 };
 
@@ -37,11 +46,7 @@ export const getSurveysWithPagination = async (page: number = 1, limit: number =
   };
 };
 
-/**
- * Search by numeric ID, email, or phone number.
- * Falls back to a LIKE search on fullName if nothing exact is found.
- */
-export const searchMemberByQuery = async (query: string): Promise<Survey | null> => {
+export const searchMemberByQuery = async (query: string) => {
   const numericId = Number(query);
   if (!isNaN(numericId) && Number.isInteger(numericId)) {
     const byId = await prisma.survey.findUnique({ where: { id: numericId } });
@@ -59,7 +64,7 @@ export const searchMemberByQuery = async (query: string): Promise<Survey | null>
   });
 };
 
-export const searchMembersByQuery = async (query: string, limit: number = 10): Promise<Survey[]> => {
+export const searchMembersByQuery = async (query: string, limit: number = 10) => {
   if (!query || query.length < 2) return [];
 
   return prisma.survey.findMany({

@@ -5,6 +5,7 @@ import path from 'path';
 import surveyRoutes from './routes/survey.routes';
 import locationRoutes from './routes/location.routes';
 import feedbackRoutes from './routes/feedback.routes';
+import donationRoutes from './routes/donation.routes';
 import logger from './utils/logger';
 import errorHandler from './middleware/errorHandler';
 import { upload } from './middleware/upload';
@@ -45,6 +46,7 @@ app.post('/api/upload', upload.single('organizationLogo'), (req: express.Request
 app.use('/api', surveyRoutes);
 app.use('/api', locationRoutes);
 app.use('/api', feedbackRoutes);
+app.use('/api', donationRoutes);
 
 // Centralized Error Handler
 // This MUST be the last middleware registered

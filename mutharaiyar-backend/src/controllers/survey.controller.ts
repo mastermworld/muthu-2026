@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { createSurvey, getAllSurveys, getSurveyById, getSurveysWithPagination, searchMemberByQuery, searchMembersByQuery } from '../services/survey.service';
+import { createSurvey, findSurveyByMobileOrEmail, getAllSurveys, getSurveyById, getSurveysWithPagination, searchMemberByQuery, searchMembersByQuery } from '../services/survey.service';
 import logger from '../utils/logger';
 
 /**
@@ -15,10 +15,20 @@ export const submitSurvey = asyncHandler(async (req: Request, res: Response): Pr
     return;
   }
 
+  const existing = await findSurveyByMobileOrEmail(req.body.mobile, req.body.email, req.body.altMobile);
+  if (existing) {
+    let field = 'mobile';
+    let label = 'mobile number';
+    if (existing.email === req.body.email) { field = 'email'; label = 'email address'; }
+    else if (req.body.altMobile && existing.altMobile === req.body.altMobile) { field = 'altMobile'; label = 'alternative mobile number'; }
+    res.status(409).json({ status: 'error', message: `A record with this ${label} already exists.`, field });
+    return;
+  }
+
   const surveyData = {
     ...req.body,
-    profilePicture: `uploads/${file.filename}`, // Save relative path that matches static file serving
-    birthdate: new Date(req.body.birthdate).toISOString(), // Ensure date format
+    profilePicture: `uploads/${file.filename}`,
+    birthdate: new Date(req.body.birthdate).toISOString(),
   };
 
   const newSurvey = await createSurvey(surveyData);

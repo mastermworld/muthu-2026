@@ -28,41 +28,54 @@ interface Translations {
 }
 
 const translations: Translations = {
-  registrationForm: { english: "Registration Form", tamil: "பதிவு படிவம்" },
-  fullName:         { english: "Full Name",          tamil: "முழு பெயர்" },
-  gender:           { english: "Gender",             tamil: "பாலினம்" },
-  mobile:           { english: "Mobile Number",      tamil: "மொபைல் எண்" },
-  email:            { english: "Email Address",      tamil: "மின்னஞ்சல் முகவரி" },
-  birthdate:        { english: "Date of Birth",      tamil: "பிறந்த தேதி" },
-  maritalStatus:    { english: "Marital Status",     tamil: "திருமண நிலை" },
-  bloodGroup:       { english: "Blood Group",        tamil: "இரத்த வகை" },
-  address:          { english: "Address",            tamil: "முகவரி" },
-  education:        { english: "Education Level",    tamil: "கல்வித் தகுதி" },
-  jobType:          { english: "Job Type",           tamil: "வேலை வகை" },
-  jobDescription:   { english: "Job Description",   tamil: "வேலை விவரம்" },
-  profilePicture:   { english: "Profile Picture",   tamil: "சுயவிவர படம்" },
-  submit:           { english: "Submit Registration", tamil: "பதிவு சமர்ப்பிக்கவும்" },
-  economicStatus:   { english: "Economic Status",   tamil: "பொருளாதார நிலை" },
-  physicallyChallenged: { english: "Physically Challenged", tamil: "மாற்றுத்திறனாளியா" },
-  orphan:           { english: "Orphan",             tamil: "அநாதை" },
-  volunteering:     { english: "Interested in Volunteering?", tamil: "தொண்டூழியத்தில் ஆர்வமா?" },
+  registrationForm: { english: "Registration Form",              tamil: "பதிவு படிவம்" },
+  fullName:         { english: "Full Name",                       tamil: "முழு பெயர்" },
+  fatherName:       { english: "Father's Name",                   tamil: "தந்தையின் பெயர்" },
+  motherName:       { english: "Mother's Name",                   tamil: "தாயின் பெயர்" },
+  gender:           { english: "Gender",                          tamil: "பாலினம்" },
+  mobile:           { english: "Mobile & WhatsApp Number",        tamil: "மொபைல் & வாட்ஸ்அப் எண்" },
+  altMobile:        { english: "Alternative Mobile Number",       tamil: "மாற்று மொபைல் எண்" },
+  email:            { english: "Email Address",                   tamil: "மின்னஞ்சல் முகவரி" },
+  birthdate:        { english: "Date of Birth",                   tamil: "பிறந்த தேதி" },
+  maritalStatus:    { english: "Marital Status",                  tamil: "திருமண நிலை" },
+  bloodGroup:       { english: "Blood Group",                     tamil: "இரத்த வகை" },
+  address:          { english: "Address",                         tamil: "முகவரி" },
+  education:        { english: "Education Level",                 tamil: "கல்வித் தகுதி" },
+  jobType:          { english: "Job Type",                        tamil: "வேலை வகை" },
+  jobDescription:   { english: "Job Description",                 tamil: "வேலை விவரம்" },
+  profilePicture:   { english: "Profile Picture",                 tamil: "சுயவிவர படம்" },
+  submit:           { english: "Submit Registration",             tamil: "பதிவு சமர்ப்பிக்கவும்" },
+  economicStatus:   { english: "Economic Status",                 tamil: "பொருளாதார நிலை" },
+  physicallyChallenged: { english: "Physically Challenged",       tamil: "மாற்றுத்திறனாளியா" },
+  orphan:           { english: "Orphan",                          tamil: "அநாதை" },
+  volunteering:     { english: "Interested in Volunteering?",     tamil: "தொண்டூழியத்தில் ஆர்வமா?" },
+  interests:        { english: "Are you interested in?",          tamil: "நீங்கள் ஆர்வமுள்ளவை?" },
+  postalCode:       { english: "Postal Code",                     tamil: "அஞ்சல் குறியீடு" },
 };
 
 // ─── Zod Schema ──────────────────────────────────────────────────────────────
 const surveySchema = z.object({
   fullName:            z.string().min(2, "Full name must be at least 2 characters"),
+  fatherName:          z.string().optional(),
+  motherName:          z.string().optional(),
   gender:              z.string().min(1, "Please select your gender"),
   mobileAreaCode:      z.string().min(1, "Please select a country code"),
   mobile:              z.string().regex(/^\d{6,15}$/, "Please enter a valid phone number"),
+  altMobileAreaCode:   z.string().optional(),
+  altMobile:           z.string().optional().refine(
+    (v) => !v || /^\d{6,15}$/.test(v),
+    "Please enter a valid phone number"
+  ),
   email:               z.string().email("Please enter a valid email address"),
   birthdate:           z.string()
-    .min(1, "Please enter your date of birth")
-    .regex(/^\d{2}\/\d{2}\/\d{4}$/, "Format must be DD/MM/YYYY")
+    .min(1, "Please select your date of birth")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Please select a valid date")
     .refine((v) => {
-      const [d, m, y] = v.split("/").map(Number);
-      const date = new Date(y, m - 1, d);
-      return date.getDate() === d && date.getMonth() === m - 1 && y >= 1900 && y <= new Date().getFullYear();
-    }, "Please enter a valid date"),
+      const date = new Date(v);
+      return !isNaN(date.getTime());
+    }, "Please enter a valid date")
+    .refine((v) => new Date(v) <= new Date(), "Date of birth cannot be in the future")
+    .refine((v) => new Date(v).getFullYear() >= 1900, "Year must be 1900 or later"),
   maritalStatus:       z.string().min(1, "Please select your marital status"),
   bloodGroup:          z.string().optional(),
   country:             z.string().min(1, "Please select your country"),
@@ -70,6 +83,10 @@ const surveySchema = z.object({
   district:            z.string().optional(),
   taluk:               z.string().optional(),
   village:             z.string().optional(),
+  postalCode:          z.string().optional().refine(
+    (v) => !v || /^\d{4,10}$/.test(v),
+    "Please enter a valid postal code"
+  ),
   address:             z.string().min(10, "Address must be at least 10 characters"),
   education:           z.string().min(1, "Please select your education level"),
   jobType:             z.string().min(1, "Please select your job type"),
@@ -78,6 +95,7 @@ const surveySchema = z.object({
   physicallyChallenged:z.string().min(1, "Please select an option"),
   orphan:              z.string().min(1, "Please select an option"),
   volunteering:        z.string().min(1, "Please select an option"),
+  interests:           z.array(z.string()).optional(),
   profilePicture:      z
     .instanceof(File)
     .refine((f) => f.size > 0, "Profile picture is required.")
@@ -107,6 +125,7 @@ const jobTypes = [
   { value: "military",            english: "Military",              tamil: "இராணுவம்" },
   { value: "private",             english: "Private Employee",      tamil: "தனியார் ஊழியர்" },
   { value: "self-employed",       english: "Self Employed",         tamil: "சுயதொழில்" },
+  { value: "software",            english: "Software",              tamil: "மென்பொருள்" },
   { value: "business",            english: "Business",              tamil: "வணிகம்" },
   { value: "farmer",              english: "Farmer",                tamil: "விவசாயி" },
   { value: "student",             english: "Student",               tamil: "மாணவர்" },
@@ -168,6 +187,17 @@ const volunteeringOptions = [
   { value: "no",        english: "Not Interested", tamil: "ஆர்வமில்லை" },
 ];
 
+const interestsOptions = [
+  { value: "not-interested",      english: "Not Interested",      tamil: "ஆர்வமில்லை" },
+  { value: "job",                 english: "Job",                  tamil: "வேலை" },
+  { value: "work-from-home",      english: "Work from Home",       tamil: "வீட்டிலிருந்து பணி" },
+  { value: "business",            english: "Business",             tamil: "வணிகம்" },
+  { value: "business-from-home",  english: "Business from Home",   tamil: "வீட்டிலிருந்து வணிகம்" },
+  { value: "money-earn",          english: "Money Earn",           tamil: "பண சம்பாத்தியம்" },
+  { value: "investment",          english: "Investment",           tamil: "முதலீடு" },
+  { value: "marketing",           english: "Marketing",            tamil: "சந்தைப்படுத்தல்" },
+];
+
 const countryCodeOptions = [
   { value: "+91",  english: "+91  India",        tamil: "+91  இந்தியா" },
   { value: "+1",   english: "+1   USA / Canada", tamil: "+1   அமெரிக்கா" },
@@ -181,6 +211,119 @@ const countryCodeOptions = [
   { value: "+49",  english: "+49  Germany",       tamil: "+49  ஜெர்மனி" },
   { value: "+33",  english: "+33  France",        tamil: "+33  பிரான்ஸ்" },
 ];
+
+// ─── Interests Multi-Select Dropdown ─────────────────────────────────────────
+function InterestsDropdown({
+  label,
+  language,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  language: string;
+  options: { value: string; english: string; tamil: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggle = (v: string) => {
+    onChange(value.includes(v) ? value.filter((x) => x !== v) : [...value, v]);
+  };
+
+  const displayLabel =
+    value.length === 0
+      ? language === "tamil" ? "தேர்ந்தெடுக்கவும்..." : "Select options..."
+      : value.length === options.length
+      ? language === "tamil" ? "அனைத்தும் தேர்ந்தெடுக்கப்பட்டது" : "All selected"
+      : value
+          .map((v) => {
+            const opt = options.find((o) => o.value === v);
+            return opt ? (language === "tamil" ? opt.tamil : opt.english) : v;
+          })
+          .join(", ");
+
+  return (
+    <div ref={ref} className="w-full">
+      <label className="block text-neutral-700 font-semibold mb-2 text-sm">{label}</label>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-white border border-neutral-300 rounded-lg text-sm font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all text-left"
+      >
+        <span className={value.length === 0 ? "text-neutral-400" : "text-neutral-800"}>
+          {displayLabel}
+        </span>
+        <svg
+          className={`w-4 h-4 text-neutral-500 transition-transform flex-shrink-0 ml-2 ${open ? "rotate-180" : ""}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="mt-1 w-full bg-white border border-neutral-200 rounded-xl shadow-lg z-20 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 max-h-64 overflow-y-auto divide-y sm:divide-y-0">
+            {options.map((opt) => {
+              const checked = value.includes(opt.value);
+              const optLabel = language === "tamil" ? opt.tamil : opt.english;
+              return (
+                <label
+                  key={opt.value}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer select-none transition-colors ${
+                    checked ? "bg-primary-50 text-primary-700" : "text-neutral-700 hover:bg-neutral-50"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={checked}
+                    onChange={() => toggle(opt.value)}
+                  />
+                  <span
+                    className={`w-4 h-4 flex-shrink-0 rounded border-2 flex items-center justify-center ${
+                      checked ? "bg-primary-500 border-primary-500" : "border-neutral-300"
+                    }`}
+                  >
+                    {checked && (
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 8">
+                        <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className="text-sm font-medium">{optLabel}</span>
+                </label>
+              );
+            })}
+          </div>
+          {value.length > 0 && (
+            <div className="border-t border-neutral-100 px-4 py-2 flex justify-between items-center bg-neutral-50">
+              <span className="text-xs text-neutral-500">{value.length} {language === "tamil" ? "தேர்ந்தெடுக்கப்பட்டது" : "selected"}</span>
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-xs text-accent-600 font-medium hover:text-accent-700"
+              >
+                {language === "tamil" ? "அனைத்தையும் நீக்கு" : "Clear all"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Section Header Helper ────────────────────────────────────────────────────
 function SectionHeader({
@@ -223,7 +366,9 @@ export default function SurveyForm() {
 
   const [locationData, setLocationData] = useState<{
     country?: string; state?: string; district?: string; taluk?: string; village?: string;
-  }>({ country: "", state: "", district: "", taluk: "", village: "" });
+  }>({ country: "india", state: "tamilnadu", district: "", taluk: "", village: "" });
+
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   const t = (key: string) => translations[key]?.[language] ?? key;
 
@@ -236,17 +381,20 @@ export default function SurveyForm() {
   } = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
     defaultValues: {
-      fullName: "", gender: "",
+      fullName: "", fatherName: "", motherName: "",
+      gender: "",
       mobileAreaCode: "+91", mobile: "",
+      altMobileAreaCode: "+91", altMobile: "",
       email: "", birthdate: "",
       maritalStatus: "", bloodGroup: "O+",
-      country: "", state: "",
-      district: "", taluk: "", village: "", address: "",
+      country: "india", state: "tamilnadu",
+      district: "", taluk: "", village: "", postalCode: "", address: "",
       education: "", jobType: "", jobDescription: "",
       economicStatus: "",
       physicallyChallenged: "no",
       orphan: "no",
       volunteering: "",
+      interests: [],
       profilePicture: null,
     },
     mode: "onBlur",
@@ -280,20 +428,44 @@ export default function SurveyForm() {
       const formData = new FormData();
       (Object.keys(data) as (keyof SurveyFormData)[]).forEach((key) => {
         const val = data[key];
-        if (!val) return;
-        if (key === "profilePicture" && val instanceof File) formData.append(key, val);
-        else if (key !== "profilePicture" && typeof val === "string") formData.append(key, val);
+        if (val === undefined || val === null || val === "") return;
+        if (key === "profilePicture" && val instanceof File) {
+          formData.append(key, val);
+        } else if (Array.isArray(val)) {
+          if (val.length > 0) formData.append(key, JSON.stringify(val));
+        } else if (typeof val === "string") {
+          formData.append(key, val);
+        }
       });
       const res = await fetch(`${API_URL}/api/survey`, { method: "POST", body: formData });
-      if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Something went wrong"); }
+      if (!res.ok) {
+        const err = await res.json();
+        const error = new Error(err.message || "Something went wrong") as Error & { field?: string; statusCode?: number };
+        error.field = err.field;
+        error.statusCode = res.status;
+        throw error;
+      }
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       alert(language === 'tamil' ? 'பதிவு வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது!' : 'Registration submitted successfully!');
       reset();
-      setLocationData({ country: "", state: "", district: "", taluk: "", village: "" });
+      setLocationData({ country: "india", state: "tamilnadu", district: "", taluk: "", village: "" });
+      setSelectedInterests([]);
     },
-    onError: (error: Error) => alert(language === 'tamil' ? `சமர்ப்பிப்பு தோல்வி: ${error.message}` : `Submission failed: ${error.message}`),
+    onError: (error: Error & { field?: string; statusCode?: number }) => {
+      if (error.statusCode === 409) {
+        if (error.field === 'mobile') {
+          setError('mobile', { type: 'manual', message: language === 'tamil' ? 'இந்த மொபைல் எண் ஏற்கனவே பதிவாகியுள்ளது.' : error.message });
+        } else if (error.field === 'email') {
+          setError('email', { type: 'manual', message: language === 'tamil' ? 'இந்த மின்னஞ்சல் முகவரி ஏற்கனவே பதிவாகியுள்ளது.' : error.message });
+        } else if (error.field === 'altMobile') {
+          setError('altMobile', { type: 'manual', message: language === 'tamil' ? 'இந்த மாற்று மொபைல் எண் ஏற்கனவே பதிவாகியுள்ளது.' : error.message });
+        }
+      } else {
+        alert(language === 'tamil' ? `சமர்ப்பிப்பு தோல்வி: ${error.message}` : `Submission failed: ${error.message}`);
+      }
+    },
   });
 
   const onSubmit: SubmitHandler<SurveyFormData> = (data) => {
@@ -301,8 +473,7 @@ export default function SurveyForm() {
       setError("profilePicture", { type: "manual", message: language === 'tamil' ? 'சுயவிவர படம் அவசியம்.' : 'Profile picture is required.' });
       return;
     }
-    const [dd, mm, yyyy] = data.birthdate.split("/");
-    mutation.mutate({ ...data, birthdate: `${yyyy}-${mm}-${dd}` });
+    mutation.mutate(data);
   };
 
   return (
@@ -380,12 +551,31 @@ export default function SurveyForm() {
                 onKeyDown={handleKeyDown}
               />
 
+              <InputField
+                label={t("fatherName")}
+                name="fatherName"
+                register={register}
+                error={errors.fatherName}
+                placeholder={language === "tamil" ? "தந்தையின் பெயர்" : "Enter father's name"}
+                uppercase
+                onKeyDown={handleKeyDown}
+              />
+
+              <InputField
+                label={t("motherName")}
+                name="motherName"
+                register={register}
+                error={errors.motherName}
+                placeholder={language === "tamil" ? "தாயின் பெயர்" : "Enter mother's name"}
+                uppercase
+                onKeyDown={handleKeyDown}
+              />
+
               <DateField
                 label={t("birthdate")}
                 name="birthdate"
                 register={register}
                 error={errors.birthdate}
-                helperText={language === "tamil" ? "வடிவம்: dd/mm/yyyy" : "Format: dd/mm/yyyy"}
                 onKeyDown={handleKeyDown}
               />
 
@@ -416,10 +606,10 @@ export default function SurveyForm() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-              {/* Mobile with country code */}
+              {/* Mobile & WhatsApp with country code */}
               <div className="w-full">
                 <label htmlFor="mobile" className="block text-neutral-700 font-semibold mb-2 text-sm">
-                  {t("mobile")}
+                  {t("mobile")} <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -441,7 +631,7 @@ export default function SurveyForm() {
                     type="tel"
                     inputMode="numeric"
                     {...register("mobile")}
-                    placeholder={language === "tamil" ? "மொபைல் எண்" : "Mobile number"}
+                    placeholder={language === "tamil" ? "மொபைல் & வாட்ஸ்அப் எண்" : "Mobile & WhatsApp number"}
                     onKeyDown={handleKeyDown}
                     className={`flex-1 px-4 py-3 bg-white border rounded-lg text-neutral-800 font-medium placeholder:text-neutral-400 focus:outline-none focus:ring-2 transition-all ${
                       errors.mobile
@@ -454,6 +644,44 @@ export default function SurveyForm() {
                   <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
                     <span className="w-1 h-1 bg-red-500 rounded-full inline-block" />
                     {errors.mobile?.message ?? errors.mobileAreaCode?.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Alternative Mobile (optional) */}
+              <div className="w-full">
+                <label htmlFor="altMobile" className="block text-neutral-700 font-semibold mb-2 text-sm">
+                  {t("altMobile")} <span className="text-neutral-400 text-xs font-normal">({language === "tamil" ? "விரும்பினால்" : "optional"})</span>
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    id="altMobileAreaCode"
+                    {...register("altMobileAreaCode")}
+                    onKeyDown={handleKeyDown}
+                    className="w-28 sm:w-32 flex-shrink-0 px-2 py-3 bg-white border border-neutral-300 rounded-lg text-sm font-medium text-neutral-800 appearance-none focus:outline-none focus:ring-2 focus:border-primary-400 focus:ring-primary-500/20 transition-all"
+                  >
+                    {toOptions(countryCodeOptions).map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <input
+                    id="altMobile"
+                    type="tel"
+                    inputMode="numeric"
+                    {...register("altMobile")}
+                    placeholder={language === "tamil" ? "மாற்று மொபைல் எண்" : "Alternative number"}
+                    onKeyDown={handleKeyDown}
+                    className={`flex-1 px-4 py-3 bg-white border rounded-lg text-neutral-800 font-medium placeholder:text-neutral-400 focus:outline-none focus:ring-2 transition-all ${
+                      errors.altMobile
+                        ? "border-red-300 focus:ring-red-200"
+                        : "border-neutral-300 focus:border-primary-400 focus:ring-primary-500/20"
+                    }`}
+                  />
+                </div>
+                {errors.altMobile && (
+                  <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-red-500 rounded-full inline-block" />
+                    {errors.altMobile.message}
                   </p>
                 )}
               </div>
@@ -478,6 +706,16 @@ export default function SurveyForm() {
               required={true}
               className="mb-6"
             />
+            <div className="mb-6">
+              <InputField
+                label={t("postalCode")}
+                name="postalCode"
+                register={register}
+                error={errors.postalCode}
+                placeholder={language === "tamil" ? "அஞ்சல் குறியீடு (விரும்பினால்)" : "Postal / PIN code (optional)"}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
             <TextAreaField
               label={t("address")}
               name="address"
@@ -575,6 +813,17 @@ export default function SurveyForm() {
                 onKeyDown={handleKeyDown}
               />
             </div>
+          </div>
+
+          {/* ── Section 7: Interests multi-select dropdown ───────────── */}
+          <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 md:p-8">
+            <InterestsDropdown
+              label={t("interests")}
+              language={language}
+              options={interestsOptions}
+              value={selectedInterests}
+              onChange={(next) => { setSelectedInterests(next); setValue("interests", next); }}
+            />
           </div>
 
           {/* ── Submit ────────────────────────────────────────────────── */}

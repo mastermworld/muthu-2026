@@ -1,4 +1,5 @@
 import React from 'react';
+import { API_URL } from '../config/api';
 
 interface Member {
   id: number;
@@ -18,9 +19,15 @@ interface GoldenTemplateProps {
 
 const GoldenTemplate: React.FC<GoldenTemplateProps> = ({ member, className = '' }) => {
   // Fallback values for demonstration if member data is not fully available
+  const resolveProfilePic = (pic?: string) => {
+    if (!pic) return 'https://i.ibb.co/6wmN2S1/profile-pic.jpg';
+    if (pic.startsWith('http')) return pic;
+    return `${API_URL}/${pic}`;
+  };
+
   const memberData = {
     id: member.id || 1,
-    profilePicture: member.profilePicture || 'https://i.ibb.co/6wmN2S1/profile-pic.jpg',
+    profilePicture: resolveProfilePic(member.profilePicture),
     fullName: member.fullName || 'D.Rameshkumar',
     jobDescription: member.jobDescription || 'Software Manager',
     mobile: member.mobile || '908870 99000',
@@ -43,7 +50,7 @@ const GoldenTemplate: React.FC<GoldenTemplateProps> = ({ member, className = '' 
         <div className="relative p-6 flex flex-col h-full">
             {/* <h1 className="text-red-600 text-4xl font-bold text-center mb-4">MUTHARAIYAR</h1> */}
 
-            <div className="absolute top-20 left-1/2 -translate-x-1/2">
+            <div className="absolute top-12 right-11 -translate-x-1/2">
                 <div className="w-36 h-36 rounded-full bg-white shadow-md p-1">
                     <img src={memberData.profilePicture} alt="Profile Picture" className="w-full h-full rounded-full object-cover" />
                 </div>

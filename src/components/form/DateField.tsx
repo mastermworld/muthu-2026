@@ -7,8 +7,9 @@ interface DateFieldProps {
   name: string;
   register: any;
   error?: FieldError;
-  placeholder?: string;
   helperText?: string;
+  min?: string;
+  max?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
@@ -18,23 +19,14 @@ export default function DateField({
   register,
   error,
   helperText,
+  min = "1900-01-01",
+  max,
   onKeyDown,
 }: DateFieldProps) {
   const reg = register(name);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let v = e.target.value.replace(/[^0-9/]/g, "");
-
-    const digits = v.replace(/\//g, "");
-    let formatted = "";
-    for (let i = 0; i < digits.length && i < 8; i++) {
-      if (i === 2 || i === 4) formatted += "/";
-      formatted += digits[i];
-    }
-    e.target.value = formatted;
-    reg.onChange(e);
-  };
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <div className="w-full group">
@@ -44,25 +36,23 @@ export default function DateField({
       <div className="relative">
         <input
           id={name}
-          type="text"
-          inputMode="numeric"
-          maxLength={10}
+          type="date"
+          min={min}
+          max={max ?? today}
           {...reg}
           ref={(el: HTMLInputElement | null) => {
             reg.ref(el);
             inputRef.current = el;
           }}
-          onChange={handleChange}
-          placeholder="DD/MM/YYYY"
           onKeyDown={onKeyDown}
           className={`w-full px-4 py-3 bg-white border rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 ${
             error
               ? "border-accent-300 focus:ring-accent-200"
               : "border-neutral-300 focus:border-primary-400 focus:ring-primary-500/20"
-          } placeholder:text-neutral-400 text-neutral-800 font-medium`}
+          } text-neutral-800 font-medium`}
         />
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <Calendar className="w-5 h-5 text-neutral-500 group-hover:text-primary-500 transition-colors duration-300" />
+        <div className="absolute inset-y-0 right-8 flex items-center pointer-events-none">
+          <Calendar className="w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-colors duration-300" />
         </div>
       </div>
       {error ? (

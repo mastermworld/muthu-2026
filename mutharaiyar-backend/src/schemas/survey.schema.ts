@@ -17,11 +17,20 @@ export const surveySchema = z.object({
     education: z.string({ required_error: 'Education is required' }),
     jobType: z.string({ required_error: 'Job type is required' }),
     jobDescription: z.string({ required_error: 'Job description is required' }).min(5, 'Job description must be at least 5 characters'),
+    // Parent names
+    fatherName: z.string().optional(),
+    motherName: z.string().optional(),
+
+    // Alternative contact
+    altMobile: z.string().regex(/^\d{6,15}$/, 'Invalid alternative mobile format').optional(),
+    altMobileAreaCode: z.string().optional(),
+
     // Optional fields for Tamil Nadu
     district: z.string().optional(),
     taluk: z.string().optional(),
     village: z.string().optional(),
-    
+    postalCode: z.string().optional(),
+
     // Medical information
     bloodGroup: z.string().optional(),
 
@@ -30,6 +39,7 @@ export const surveySchema = z.object({
     physicallyChallenged: z.string().optional(),
     orphan: z.string().optional(),
     volunteering: z.string().optional(),
+    interests: z.string().optional(),
     mobileAreaCode: z.string().optional(),
   }),
 });

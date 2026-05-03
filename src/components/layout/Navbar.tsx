@@ -21,7 +21,7 @@ export const useLanguage = () => useContext(LanguageContext);
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [language, setLanguage] = useState<"english" | "tamil">("english");
+  const [language, setLanguage] = useState<"english" | "tamil">("tamil");
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>
       {children}

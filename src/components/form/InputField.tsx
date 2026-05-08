@@ -1,5 +1,6 @@
 import React from "react";
 import { FieldError } from "react-hook-form";
+import { translateError } from "./errorTranslations";
 
 interface InputFieldProps {
   label: string;
@@ -10,6 +11,7 @@ interface InputFieldProps {
   type?: string;
   uppercase?: boolean;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  language?: string;
 }
 
 export default function InputField({
@@ -21,6 +23,7 @@ export default function InputField({
   type = "text",
   uppercase,
   onKeyDown,
+  language = "english",
 }: InputFieldProps) {
   const reg = register(name);
 
@@ -62,7 +65,7 @@ export default function InputField({
       {error && (
         <p className="text-accent-600 text-sm mt-1.5 flex items-center space-x-1 animate-slide-up">
           <span className="w-1 h-1 bg-accent-500 rounded-full"></span>
-          <span>{error.message}</span>
+          <span>{translateError(error.message, language)}</span>
         </p>
       )}
     </div>

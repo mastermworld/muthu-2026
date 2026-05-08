@@ -9,7 +9,7 @@ interface SubmitButtonProps {
 }
 
 export default function SubmitButton({ isSubmitting, isValid, className, children }: SubmitButtonProps) {
-  const disabled = isSubmitting || !isValid;
+  const disabled = isSubmitting;
 
   return (
     <button

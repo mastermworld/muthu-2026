@@ -1,6 +1,7 @@
 import React from "react";
 import { FieldError } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
+import { translateError } from "./errorTranslations";
 
 interface Option {
   value: string;
@@ -16,6 +17,7 @@ interface SelectFieldProps {
   options: Option[];
   disabled?: boolean;
   onKeyDown?: (e: React.KeyboardEvent<HTMLSelectElement>) => void;
+  language?: string;
 }
 
 export default function SelectField({
@@ -27,6 +29,7 @@ export default function SelectField({
   options,
   disabled = false,
   onKeyDown,
+  language = "english",
 }: SelectFieldProps) {
   return (
     <div className="w-full group">
@@ -56,28 +59,28 @@ export default function SelectField({
             </option>
           ))}
         </select>
-        
+
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-          <ChevronDown 
+          <ChevronDown
             className={`w-5 h-5 transition-colors duration-300 ${
-              disabled ? 'text-neutral-300' : 'text-neutral-500 group-hover:text-primary-500'
-            }`} 
+              disabled ? "text-neutral-300" : "text-neutral-500 group-hover:text-primary-500"
+            }`}
           />
         </div>
       </div>
-      
+
       {error && (
         <p className="text-accent-600 text-sm mt-1.5 flex items-center space-x-1 animate-slide-up">
           <span className="w-1 h-1 bg-accent-500 rounded-full"></span>
-          <span>{error.message}</span>
+          <span>{translateError(error.message, language)}</span>
         </p>
       )}
-      
+
       {disabled && !error && (
         <p className="text-neutral-500 text-xs mt-1 flex items-center space-x-1">
-          <span>Please select the previous option first</span>
+          <span>{language === "tamil" ? "முந்தைய விருப்பத்தை முதலில் தேர்ந்தெடுக்கவும்" : "Please select the previous option first"}</span>
         </p>
       )}
     </div>
   );
-} 
+}

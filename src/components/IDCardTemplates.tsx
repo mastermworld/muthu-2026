@@ -65,7 +65,21 @@ interface IDCardTemplateProps {
   className?: string;
 }
 
-// Mutharaiyar Golden Template
+// ─── Location display helper ─────────────────────────────────────────────────
+// For India: State, District, Taluk, Village (whichever are present)
+// For other countries: Country, State/Province
+function getLocationDisplay(member: Member): string {
+  const isIndia = (member.country || '').toLowerCase() === 'india';
+  if (isIndia) {
+    return [member.state, member.district, member.taluk, member.village]
+      .filter(Boolean)
+      .join(', ');
+  }
+  return [member.country, member.state]
+    .filter(Boolean)
+    .join(', ');
+}
+
 export const MutharaiyarTemplate: React.FC<IDCardTemplateProps> = ({ member, template, className = '' }) => {
   const memberIdDisplay = `MUTHU-${String(member.id).padStart(6, '0')}`;
   const qrData = JSON.stringify({
@@ -129,7 +143,7 @@ export const MutharaiyarTemplate: React.FC<IDCardTemplateProps> = ({ member, tem
                 <Mail className="w-4 h-4 ml-2" />
               </div>
               <div className="flex items-center justify-end">
-                <span>{member.district}, {member.state}</span>
+                <span>{getLocationDisplay(member)}</span>
                 <MapPin className="w-4 h-4 ml-2" />
               </div>
             </div>
@@ -143,7 +157,7 @@ export const MutharaiyarTemplate: React.FC<IDCardTemplateProps> = ({ member, tem
 // Modern Minimalist Template
 export const ModernMinimalistTemplate: React.FC<IDCardTemplateProps> = ({ member, template, className = '' }) => {
   const memberIdDisplay = String(member.id).padStart(6, '0');
-  const location = [member.district, member.state].filter(Boolean).join(', ');
+  const location = getLocationDisplay(member);
   
   const qrData = JSON.stringify({
     id: member.id,
@@ -258,7 +272,7 @@ export const ModernMinimalistTemplate: React.FC<IDCardTemplateProps> = ({ member
 // Corporate Professional Template
 export const CorporateProfessionalTemplate: React.FC<IDCardTemplateProps> = ({ member, template, className = '' }) => {
   const memberIdDisplay = `EMP-${String(member.id).padStart(6, '0')}`;
-  const location = [member.district, member.state].filter(Boolean).join(', ');
+  const location = getLocationDisplay(member);
   
   const qrData = JSON.stringify({
     id: member.id,
@@ -505,9 +519,7 @@ export const CreativeGradientTemplate: React.FC<IDCardTemplateProps> = ({ member
 // Classic Elegant Template
 export const ClassicElegantTemplate: React.FC<IDCardTemplateProps> = ({ member, template, className = '' }) => {
   const memberIdDisplay = `M${String(member.id).padStart(6, '0')}`;
-  const location = [member.village, member.taluk, member.district, member.state]
-    .filter(Boolean)
-    .join(', ');
+  const location = getLocationDisplay(member);
   
   const qrData = JSON.stringify({
     id: member.id,
@@ -620,7 +632,7 @@ export const ClassicElegantTemplate: React.FC<IDCardTemplateProps> = ({ member, 
 // Vertical Modern Template
 export const VerticalModernTemplate: React.FC<IDCardTemplateProps> = ({ member, template, className = '' }) => {
   const memberIdDisplay = String(member.id).padStart(6, '0');
-  const location = [member.district, member.state].filter(Boolean).join(', ');
+  const location = getLocationDisplay(member);
   
   const qrData = JSON.stringify({
     id: member.id,

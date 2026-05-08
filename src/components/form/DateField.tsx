@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { FieldError } from "react-hook-form";
 import { Calendar } from "lucide-react";
+import { translateError } from "./errorTranslations";
 
 interface DateFieldProps {
   label: string;
@@ -11,6 +12,7 @@ interface DateFieldProps {
   min?: string;
   max?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  language?: string;
 }
 
 export default function DateField({
@@ -22,6 +24,7 @@ export default function DateField({
   min = "1900-01-01",
   max,
   onKeyDown,
+  language = "english",
 }: DateFieldProps) {
   const reg = register(name);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -58,7 +61,7 @@ export default function DateField({
       {error ? (
         <p className="text-accent-600 text-sm mt-1.5 flex items-center space-x-1 animate-slide-up">
           <span className="w-1 h-1 bg-accent-500 rounded-full"></span>
-          <span>{error.message}</span>
+          <span>{translateError(error.message, language)}</span>
         </p>
       ) : helperText ? (
         <p className="text-neutral-500 text-xs mt-1.5">{helperText}</p>

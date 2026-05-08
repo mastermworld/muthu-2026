@@ -227,7 +227,7 @@ export default function ImageUpload({ label, error, onChange, value }: ImageUplo
   const handleRemove = () => { onChange(null); setPreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; };
 
   return (
-    <div className="mb-6">
+    <div id="profilePicture" className="mb-6">
       <label className=" flex items-center justify-center block text-neutral-800 font-semibold mb-3 text-lg left-10">{label}</label>
 
       {/* ── Camera Modal ──────────────────────────────────────────── */}

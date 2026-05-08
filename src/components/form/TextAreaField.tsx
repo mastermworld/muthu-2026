@@ -1,6 +1,7 @@
 import React from "react";
 import { FieldError } from "react-hook-form";
 import { FileText } from "lucide-react";
+import { translateError } from "./errorTranslations";
 
 interface TextAreaFieldProps {
   label: string;
@@ -10,6 +11,7 @@ interface TextAreaFieldProps {
   placeholder?: string;
   rows?: number;
   onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  language?: string;
 }
 
 export default function TextAreaField({
@@ -20,6 +22,7 @@ export default function TextAreaField({
   placeholder,
   rows = 4,
   onKeyDown,
+  language = "english",
 }: TextAreaFieldProps) {
   return (
     <div className="w-full group">
@@ -46,7 +49,7 @@ export default function TextAreaField({
       {error && (
         <p className="text-accent-600 text-sm mt-1.5 flex items-center space-x-1 animate-slide-up">
           <span className="w-1 h-1 bg-accent-500 rounded-full"></span>
-          <span>{error.message}</span>
+          <span>{translateError(error.message, language)}</span>
         </p>
       )}
     </div>

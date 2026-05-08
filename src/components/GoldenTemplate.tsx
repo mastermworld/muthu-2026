@@ -9,12 +9,37 @@ interface Member {
   mobile: string;
   bloodGroup?: string;
   address: string;
+  country?: string;
+  state?: string;
+  district?: string | null;
+  taluk?: string | null;
+  village?: string | null;
 }
 
 interface GoldenTemplateProps {
   member: Member;
   template?: any;
   className?: string;
+}
+
+// Capitalize the first letter of a string
+function cap(s?: string | null): string {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Returns address lines for the card
+function getLocationLines(member: Member): string[] {
+  const isIndia = (member.country || '').toLowerCase() === 'india';
+  if (isIndia) {
+    const line1 = cap(member.village);                              // Village
+    const line2 = [cap(member.taluk), cap(member.district)]        // Taluk, District
+      .filter(Boolean).join(', ');
+    const line3 = cap(member.state);                                // State
+    return [line1, line2, line3].filter(Boolean);
+  }
+  // Non-India: Country then State/Province
+  return [cap(member.country), cap(member.state)].filter(Boolean);
 }
 
 const GoldenTemplate: React.FC<GoldenTemplateProps> = ({ member, className = '' }) => {
@@ -25,6 +50,10 @@ const GoldenTemplate: React.FC<GoldenTemplateProps> = ({ member, className = '' 
     return `${API_URL}/${pic}`;
   };
 
+  const locationLines = getLocationLines(member);
+  // Fallback to raw address if no structured location available
+  const fallbackAddress = locationLines.length === 0 ? (member.address || '') : null;
+
   const memberData = {
     id: member.id || 1,
     profilePicture: resolveProfilePic(member.profilePicture),
@@ -32,7 +61,8 @@ const GoldenTemplate: React.FC<GoldenTemplateProps> = ({ member, className = '' 
     jobDescription: member.jobDescription || 'Software Manager',
     mobile: member.mobile || '908870 99000',
     bloodGroup: member.bloodGroup || 'O+ve',
-    address: member.address || 'Chennai',
+    locationLines,
+    fallbackAddress,
   };
   
   const qrData = JSON.stringify({
@@ -58,11 +88,24 @@ const GoldenTemplate: React.FC<GoldenTemplateProps> = ({ member, className = '' 
 
          
             <div className="mt-44 text-black text-lg font-sans space-y-0.5 left-5 text-align-left">
-                <p className="font-bold text-left">{memberData.fullName}</p>
+                <p className="font-bold text-left">
+                  {memberData.fullName}
+                  {memberData.bloodGroup && (
+                    <span className="font-normal text-base ml-2">({memberData.bloodGroup})</span>
+                  )}
+                </p>
                 <p className="text-left">{memberData.jobDescription}</p>
                 <p className="text-left">{memberData.mobile}</p>
-                <p className="text-left">{memberData.bloodGroup}</p>
-                <p className="text-left">{memberData.address}</p>
+                {/* Address lines */}
+                {memberData.locationLines.length > 0 ? (
+                  memberData.locationLines.map((line, i) => (
+                    <p key={i} className="text-left">{line}</p>
+                  ))
+                ) : (
+                  memberData.fallbackAddress && (
+                    <p className="text-left">{memberData.fallbackAddress}</p>
+                  )
+                )}
             </div>
             
             <div className="flex items-end justify-between mt-auto">
@@ -87,4 +130,4 @@ const GoldenTemplate: React.FC<GoldenTemplateProps> = ({ member, className = '' 
   );
 };
 
-export default GoldenTemplate; 
+export default GoldenTemplate;

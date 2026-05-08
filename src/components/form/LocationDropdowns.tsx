@@ -21,6 +21,10 @@ interface LocationDropdownsProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
+  errors?: {
+    country?: string;
+    state?: string;
+  };
 }
 
 interface SearchableDropdownProps {
@@ -33,6 +37,7 @@ interface SearchableDropdownProps {
   placeholder: string;
   required?: boolean;
   icon?: React.ReactNode;
+  error?: string;
 }
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
@@ -44,7 +49,8 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   disabled,
   placeholder,
   required,
-  icon
+  icon,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -112,16 +118,17 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
-      
+
       <div className="relative">
         {/* Main display/trigger */}
         <div
           onClick={handleToggle}
           className={`
-            w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 
+            w-full px-4 py-3 border rounded-lg bg-white text-gray-900
             transition-colors duration-200 cursor-pointer
             ${disabled || loading ? 'bg-gray-100 cursor-not-allowed' : 'hover:border-gray-400'}
             ${isOpen ? 'ring-2 ring-orange-500 border-orange-500' : ''}
+            ${error && !value ? 'border-red-300 ring-1 ring-red-200' : 'border-gray-300'}
             ${loading ? 'animate-pulse' : ''}
             flex items-center justify-between
           `}
@@ -192,6 +199,12 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           </div>
         )}
       </div>
+      {error && !value && (
+        <p className="text-red-500 text-sm mt-1.5 flex items-center gap-1">
+          <span className="w-1 h-1 bg-red-500 rounded-full inline-block" />
+          {error}
+        </p>
+      )}
     </div>
   );
 };
@@ -201,7 +214,8 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
   onChange,
   required = false,
   disabled = false,
-  className = ''
+  className = '',
+  errors = {},
 }) => {
   // State for dropdown options
   const [countries, setCountries] = useState<LocationOption[]>([]);
@@ -397,6 +411,7 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
           placeholder={language === 'tamil' ? 'நாடு தேர்ந்தெடுக்கவும்' : 'Select Country'}
           required={required}
           icon={<FiMapPin />}
+          error={errors.country}
         />
 
         <SearchableDropdown
@@ -408,6 +423,7 @@ const LocationDropdowns: React.FC<LocationDropdownsProps> = ({
           disabled={disabled || !value.country}
           placeholder={language === 'tamil' ? 'மாநிலம் தேர்ந்தெடுக்கவும்' : 'Select State'}
           required={required}
+          error={errors.state}
         />
 
         {(hasDistricts || value.district) && (

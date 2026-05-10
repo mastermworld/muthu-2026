@@ -18,7 +18,8 @@ const errorHandler = (err: AppError, req: Request, res: Response, next: NextFunc
     switch (err.code) {
       case 'P2002':
         // Unique constraint violation
-        const fields = (err.meta as { target?: string[] })?.target?.join(', ');
+        const target = (err.meta as any)?.target;
+        const fields = Array.isArray(target) ? target.join(', ') : (typeof target === 'string' ? target : 'field');
         message = `A record with this ${fields} already exists.`;
         statusCode = 409; // Conflict
         break;

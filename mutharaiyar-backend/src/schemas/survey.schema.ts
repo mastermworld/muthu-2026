@@ -41,6 +41,7 @@ export const surveySchema = z.object({
     volunteering: z.string().optional(),
     interests: z.string().optional(),
     mobileAreaCode: z.string().optional(),
+    referrer: z.string().optional(),
   }),
 });
 

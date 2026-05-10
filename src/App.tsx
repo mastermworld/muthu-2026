@@ -47,7 +47,7 @@ function App() {
                 <Route path="/donation" element={<DonationPage />} />
                 <Route path="/mutharaiyar" element={<MutharaiyarPage />} />
                 <Route path="/services" element={<ServicesPage />} />
-                <Route path="/feedback" element={<FeedbackForm />} />
+                <Route path="/contact" element={<FeedbackForm />} />
                 
                 {/* New routes */}
                 <Route path="/faq" element={<FAQPage />} />

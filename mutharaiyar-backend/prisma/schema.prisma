@@ -15,12 +15,13 @@ model Survey {
   fatherName      String?
   motherName      String?
   gender          String
-  mobile          String   @unique
+  mobile          String
   mobileAreaCode  String?  @default("+91")
-  altMobile       String?  @unique
+  altMobile       String?
   altMobileAreaCode String? @default("+91")
-  email           String   @unique
+  email           String
   birthdate       String
+  referrer        String?
   maritalStatus   String
 
   economicStatus       String?

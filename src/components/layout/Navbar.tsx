@@ -13,7 +13,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType>({
   language: "english",
-  setLanguage: () => {},
+  setLanguage: () => { },
 });
 
 export const useLanguage = () => useContext(LanguageContext);
@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
   {
     labelEn: "Mutharaiyar", labelTa: "முத்தரையர்",
     icon: Sparkles,
-    gradient: "from-yellow-500 to-yellow-600",
+    gradient: "from-orange-500 to-orange-600",
     dropdown: [
       { to: "/29-subcastes", icon: Users, labelEn: "29 Subcastes", labelTa: "29 உட்பிரிவுகள்" },
       { to: "/services", icon: Building, labelEn: "Our Services", labelTa: "எங்கள் சேவைகள்" },
@@ -61,18 +61,23 @@ const navItems: NavItem[] = [
   {
     labelEn: "FAQ", labelTa: "கேள்வி பதில்",
     icon: HelpCircle,
-    gradient: "from-blue-500 to-blue-600",
+    gradient: "from-orange-500 to-orange-600",
     to: "/faq",
   },
   {
     labelEn: "Help Us", labelTa: "எங்களுக்கு உதவுங்கள்",
     icon: HandHeart,
-    gradient: "from-red-500 to-red-600",
+    gradient: "from-orange-500 to-orange-600",
     dropdown: [
       { to: "/donation", icon: Heart, labelEn: "Donation", labelTa: "நன்கொடை" },
       { to: "/forward-survey", icon: FileText, labelEn: "Forward Survey", labelTa: "கணக்கெடுப்பை பகிரவும்" },
-      { to: "/feedback", icon: FileText, labelEn: "Feedback", labelTa: "கருத்து" },
     ],
+  },
+  {
+    labelEn: "Contact Us", labelTa: "தொடர்பு கொள்ள",
+    icon: HelpCircle,
+    gradient: "from-orange-500 to-orange-600",
+    to: "/contact",
   },
 ];
 
@@ -125,10 +130,9 @@ export default function Navbar() {
                   <NavLink
                     to={item.to}
                     className={({ isActive }) =>
-                      `flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                        isActive
-                          ? `bg-gradient-to-r ${item.gradient} text-white shadow`
-                          : "text-neutral-700 hover:bg-neutral-100"
+                      `flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${isActive
+                        ? `bg-gradient-to-r ${item.gradient} text-white shadow`
+                        : "text-neutral-700 hover:bg-neutral-100"
                       }`
                     }
                   >
@@ -147,21 +151,19 @@ export default function Navbar() {
 
                 {item.dropdown && (
                   <div
-                    className={`absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1 transition-all duration-150 ${
-                      activeDropdown === item.labelEn
+                    className={`absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1 transition-all duration-150 ${activeDropdown === item.labelEn
                         ? "opacity-100 visible translate-y-0"
                         : "opacity-0 invisible -translate-y-1"
-                    }`}
+                      }`}
                   >
                     {item.dropdown.map((d) => (
                       <NavLink
                         key={d.to}
                         to={d.to}
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
-                            isActive
-                              ? `bg-gradient-to-r ${item.gradient} text-white`
-                              : "text-neutral-700 hover:bg-neutral-50"
+                          `flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${isActive
+                            ? `bg-gradient-to-r ${item.gradient} text-white`
+                            : "text-neutral-700 hover:bg-neutral-50"
                           }`
                         }
                       >
@@ -185,11 +187,10 @@ export default function Navbar() {
 
               <button
                 onClick={() => setLanguage("english")}
-                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                  language === "english"
+                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-all ${language === "english"
                     ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow"
                     : "text-neutral-600 hover:text-neutral-900"
-                }`}
+                  }`}
               >
                 <span className="hidden sm:inline">English</span>
                 <span className="sm:hidden">EN</span>
@@ -197,11 +198,10 @@ export default function Navbar() {
 
               <button
                 onClick={() => setLanguage("tamil")}
-                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                  language === "tamil"
+                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-all ${language === "tamil"
                     ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow"
                     : "text-neutral-600 hover:text-neutral-900"
-                }`}
+                  }`}
               >
                 <span className="hidden sm:inline">தமிழ்</span>
                 <span className="sm:hidden">த</span>
@@ -236,10 +236,9 @@ export default function Navbar() {
                     to={item.to}
                     onClick={close}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
-                        isActive
-                          ? `bg-gradient-to-r ${item.gradient} text-white`
-                          : "text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200"
+                      `flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors ${isActive
+                        ? `bg-gradient-to-r ${item.gradient} text-white`
+                        : "text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200"
                       }`
                     }
                   >
@@ -254,10 +253,9 @@ export default function Navbar() {
                   to={sub.to}
                   onClick={close}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
-                      isActive
-                        ? `bg-gradient-to-r ${item.gradient} text-white`
-                        : "text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200"
+                    `flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-colors ${isActive
+                      ? `bg-gradient-to-r ${item.gradient} text-white`
+                      : "text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200"
                     }`
                   }
                 >

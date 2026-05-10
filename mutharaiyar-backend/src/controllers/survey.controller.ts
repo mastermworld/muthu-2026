@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { createSurvey, findSurveyByMobileOrEmail, getAllSurveys, getSurveyById, getSurveysWithPagination, searchMemberByQuery, searchMembersByQuery } from '../services/survey.service';
+import { createSurvey, getAllSurveys, getSurveyById, getSurveysWithPagination, searchMemberByQuery, searchMembersByQuery } from '../services/survey.service';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 import logger from '../utils/logger';
 
 /**
@@ -15,20 +18,39 @@ export const submitSurvey = asyncHandler(async (req: Request, res: Response): Pr
     return;
   }
 
-  const existing = await findSurveyByMobileOrEmail(req.body.mobile, req.body.email, req.body.altMobile);
-  if (existing) {
-    let field = 'mobile';
-    let label = 'mobile number';
-    if (existing.email === req.body.email) { field = 'email'; label = 'email address'; }
-    else if (req.body.altMobile && existing.altMobile === req.body.altMobile) { field = 'altMobile'; label = 'alternative mobile number'; }
-    res.status(409).json({ status: 'error', message: `A record with this ${label} already exists.`, field });
+  const mobileCount = await prisma.survey.count({ where: { mobile: req.body.mobile } });
+  if (mobileCount >= 3) {
+    res.status(409).json({ status: 'error', message: `A record with this mobile number already exists 3 times.`, field: 'mobile' });
     return;
+  }
+
+  const emailCount = await prisma.survey.count({ where: { email: req.body.email } });
+  if (emailCount >= 3) {
+    res.status(409).json({ status: 'error', message: `A record with this email address already exists 3 times.`, field: 'email' });
+    return;
+  }
+
+  if (req.body.altMobile) {
+    const altMobileCount = await prisma.survey.count({ where: { altMobile: req.body.altMobile } });
+    if (altMobileCount >= 3) {
+      res.status(409).json({ status: 'error', message: `A record with this alternative mobile number already exists 3 times.`, field: 'altMobile' });
+      return;
+    }
+  }
+
+  let formattedDate = req.body.birthdate;
+  if (req.body.birthdate && req.body.birthdate.includes('-')) {
+    const parts = req.body.birthdate.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      formattedDate = `${day}/${month}/${year}`;
+    }
   }
 
   const surveyData = {
     ...req.body,
     profilePicture: `uploads/${file.filename}`,
-    birthdate: new Date(req.body.birthdate).toISOString(),
+    birthdate: formattedDate,
   };
 
   const newSurvey = await createSurvey(surveyData);

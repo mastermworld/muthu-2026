@@ -4,11 +4,11 @@ import { useLanguage } from '../components/layout/Navbar';
 import { API_URL } from '../config/api';
 
 const categories = [
-  { value: 'general',    english: 'General Feedback',   tamil: 'பொதுவான கருத்து' },
-  { value: 'suggestion', english: 'Suggestion',         tamil: 'பரிந்துரை' },
-  { value: 'complaint',  english: 'Complaint',          tamil: 'புகார்' },
-  { value: 'bug',        english: 'Bug / Issue',        tamil: 'பிழை / சிக்கல்' },
-  { value: 'other',      english: 'Other',              tamil: 'மற்றவை' },
+  { value: 'general', english: 'General Feedback', tamil: 'பொதுவான கருத்து' },
+  { value: 'suggestion', english: 'Suggestion', tamil: 'பரிந்துரை' },
+  { value: 'complaint', english: 'Complaint', tamil: 'புகார்' },
+  { value: 'bug', english: 'Bug / Issue', tamil: 'பிழை / சிக்கல்' },
+  { value: 'other', english: 'Other', tamil: 'மற்றவை' },
 ];
 
 const t = (lang: string, en: string, ta: string) => (lang === 'tamil' ? ta : en);
@@ -62,12 +62,12 @@ const FeedbackForm: React.FC = () => {
 
         {/* Header */}
         <div className="text-center">
-        
+
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold bg-gradient-to-r from-orange-600 via-yellow-600 to-red-600 bg-clip-text text-transparent">
-            {t(language, 'Share Your Feedback', 'உங்கள் கருத்தை பகிரவும்')}
+            {t(language, 'Contact Us', 'தொடர்பு கொள்ள')}
           </h1>
           <p className="text-neutral-500 mt-2 text-sm sm:text-base">
-            {t(language, 'Your feedback helps us improve our services.', 'உங்கள் கருத்து எங்கள் சேவைகளை மேம்படுத்த உதவுகிறது.')}
+            {t(language, 'Get in touch with us for any questions or feedback.', 'எந்தவொரு கேள்விகளுக்கும் அல்லது கருத்துகளுக்கும் எங்களை தொடர்பு கொள்ளவும்.')}
           </p>
         </div>
 
@@ -173,11 +173,10 @@ const FeedbackForm: React.FC = () => {
                       className="p-1 transition-transform hover:scale-110"
                     >
                       <Star
-                        className={`w-8 h-8 transition-colors ${
-                          star <= (hoverRating || form.rating)
+                        className={`w-8 h-8 transition-colors ${star <= (hoverRating || form.rating)
                             ? 'text-amber-400 fill-amber-400'
                             : 'text-neutral-300'
-                        }`}
+                          }`}
                       />
                     </button>
                   ))}
@@ -224,24 +223,36 @@ const FeedbackForm: React.FC = () => {
         )}
 
         {/* Contact Info */}
-        <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 md:p-8 text-center">
-          <p className="text-neutral-500 text-sm mb-4">
-            {t(language, 'Or reach out to us directly:', 'அல்லது நேரடியாக எங்களை தொடர்பு கொள்ளுங்கள்:')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Card 1 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 text-center flex flex-col items-center">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 mb-4 rounded-full overflow-hidden border-4 border-primary-100">
+              <img src="/r.jpeg" alt="Ramesh Varman" className="w-full h-full object-cover" />
+            </div>
+            <h3 className="text-xl font-bold text-neutral-800">Ramesh Varman</h3>
+            <p className="text-neutral-500 text-sm mb-4">ரமேஷ் வர்மன்</p>
             <a
               href="tel:+919087099000"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-semibold hover:bg-emerald-100 transition-colors text-sm"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-semibold hover:bg-emerald-100 transition-colors text-sm w-full max-w-xs"
             >
               <Phone className="w-4 h-4" />
               +91 90870 99000
             </a>
+          </div>
+
+          {/* Card 2 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 text-center flex flex-col items-center">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 mb-4 rounded-full overflow-hidden border-4 border-primary-100">
+              <img src="/cb.jpeg" alt="Chandra Babu" className="w-full h-full object-cover" />
+            </div>
+            <h3 className="text-xl font-bold text-neutral-800">Chandra Babu</h3>
+            <p className="text-neutral-500 text-sm mb-4">சந்திர பாபு</p>
             <a
-              href="mailto:Ramesh@muthuraja.com"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary-50 border border-primary-200 text-primary-700 rounded-xl font-semibold hover:bg-primary-100 transition-colors text-sm"
+              href="tel:+919841659298"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-semibold hover:bg-emerald-100 transition-colors text-sm w-full max-w-xs"
             >
-              <Mail className="w-4 h-4" />
-              Ramesh@muthuraja.com
+              <Phone className="w-4 h-4" />
+              +91 98416 59298
             </a>
           </div>
         </div>

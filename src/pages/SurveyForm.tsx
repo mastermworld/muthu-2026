@@ -97,6 +97,7 @@ const surveySchema = z.object({
   orphan: z.string().min(1, "You must select an option"),
   volunteering: z.string().min(1, "You must select an option"),
   interests: z.array(z.string()).optional(),
+  referrer: z.string().optional(),
   profilePicture: z
     .instanceof(File)
     .refine((f) => f.size > 0, "Profile picture is required.")
@@ -503,6 +504,7 @@ export default function SurveyForm() {
       orphan: "",
       volunteering: "",
       interests: [],
+      referrer: "",
       profilePicture: null,
     },
     mode: "onSubmit",
@@ -794,6 +796,16 @@ export default function SurveyForm() {
                   placeholder={language === "tamil" ? "திருமண நிலை தேர்ந்தெடுக்கவும்" : "Select marital status"}
                   onKeyDown={handleKeyDown}
                   language={language}
+                />
+
+                <InputField
+                  label={language === "tamil" ? "பரிந்துரைத்தவர் (விரும்பினால்)" : "Referrer (Optional)"}
+                  name="referrer"
+                  register={register}
+                  error={errors.referrer}
+                  placeholder={language === "tamil" ? "பரிந்துரைத்தவர் பெயர்" : "Enter referrer's name"}
+                  uppercase
+                  onKeyDown={handleKeyDown}
                 />
 
                 <SelectField

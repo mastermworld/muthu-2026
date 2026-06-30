@@ -9,6 +9,57 @@ import * as faceapi from '@vladmandic/face-api';
 let faceModelsLoaded = false;
 let faceModelsLoading = false;
 
+const SIZE_5MB = 5 * 1024 * 1024;
+
+/**
+ * Converts a canvas to a Blob that is guaranteed to be at most SIZE_5MB.
+ *
+ * Strategy:
+ *   1. PNG at full quality — fastest, lossless; accepted if ≤ 5 MB.
+ *   2. JPEG with decreasing quality (0.92 → 0.85 → 0.78 → 0.70) until
+ *      the result fits — trades minimal quality for a large size saving.
+ *   3. Resample the canvas at 80 % of original size and repeat JPEG loop
+ *      until the target is hit or scale falls below 30 %.
+ *   4. Hard fallback: JPEG at 0.60 quality (covers extreme edge-cases).
+ */
+async function compressCanvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  const toBlob = (c: HTMLCanvasElement, type: string, quality?: number) =>
+    new Promise<Blob | null>((res) => c.toBlob(res, type, quality));
+
+  // Step 1 — try lossless PNG
+  const pngBlob = await toBlob(canvas, 'image/png');
+  if (pngBlob && pngBlob.size <= SIZE_5MB) return pngBlob;
+
+  // Step 2 — try JPEG at progressively lower quality on the original canvas
+  let workCanvas = canvas;
+  for (const quality of [0.92, 0.85, 0.78, 0.70]) {
+    const blob = await toBlob(workCanvas, 'image/jpeg', quality);
+    if (blob && blob.size <= SIZE_5MB) return blob;
+  }
+
+  // Step 3 — down-sample the canvas and retry JPEG until small enough
+  let scale = 0.8;
+  while (scale >= 0.3) {
+    const scaled = document.createElement('canvas');
+    scaled.width  = Math.max(1, Math.floor(canvas.width  * scale));
+    scaled.height = Math.max(1, Math.floor(canvas.height * scale));
+    const sCtx = scaled.getContext('2d')!;
+    sCtx.imageSmoothingQuality = 'high';
+    sCtx.drawImage(canvas, 0, 0, scaled.width, scaled.height);
+    workCanvas = scaled;
+
+    for (const quality of [0.92, 0.85, 0.78, 0.70]) {
+      const blob = await toBlob(workCanvas, 'image/jpeg', quality);
+      if (blob && blob.size <= SIZE_5MB) return blob;
+    }
+    scale = Math.round((scale - 0.1) * 10) / 10;
+  }
+
+  // Step 4 — hard fallback
+  const fallback = await toBlob(workCanvas, 'image/jpeg', 0.60);
+  return fallback ?? (await toBlob(canvas, 'image/jpeg', 0.60))!;
+}
+
 async function ensureFaceModelsLoaded() {
   if (faceModelsLoaded) return;
   if (faceModelsLoading) {
@@ -172,18 +223,30 @@ export default function ImageUpload({ label, error, onChange, value }: ImageUplo
       0, 0, detectCanvas.width, detectCanvas.height,
     );
 
-    // ── 2. Run TinyFaceDetector ───────────────────────────────────────
-    // Enforce a minimum visible delay so the spinner always renders and the
-    // user can see that something is happening (React 18 batches fast updates).
+    // ── 2. Run TinyFaceDetector (multi-pass) ─────────────────────────
+    // Progressively lower score thresholds / input sizes so that faces with
+    // partially occluded features (ears hidden by hair, inward ears, missing
+    // ears, etc.) are still detected reliably.
     setFaceCheckState('checking');
     try {
+      const detectionPasses: Array<{ scoreThreshold: number; inputSize: 128 | 160 | 224 | 320 | 416 | 608 }> = [
+        { scoreThreshold: 0.5, inputSize: 416 }, // strict pass — clear, frontal faces
+        { scoreThreshold: 0.3, inputSize: 320 }, // lenient pass — slight occlusion / angle
+        { scoreThreshold: 0.2, inputSize: 160 }, // fallback  — heavy occlusion (hair over ears)
+      ];
+
       const [detections] = await Promise.all([
         (async () => {
           await ensureFaceModelsLoaded();
-          return faceapi.detectAllFaces(
-            detectCanvas,
-            new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5, inputSize: 416 }),
-          );
+          let found: faceapi.FaceDetection[] = [];
+          for (const pass of detectionPasses) {
+            found = await faceapi.detectAllFaces(
+              detectCanvas,
+              new faceapi.TinyFaceDetectorOptions(pass),
+            );
+            if (found.length > 0) break; // stop as soon as at least one face is found
+          }
+          return found;
         })(),
         new Promise<void>((r) => setTimeout(r, 500)), // minimum spinner time
       ]);
@@ -209,15 +272,14 @@ export default function ImageUpload({ label, error, onChange, value }: ImageUplo
       0, 0, cropW, cropH,
     );
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const croppedFile = new File([blob], 'cropped_image.png', { type: 'image/png' });
-      onChange(croppedFile);
-      setPreview(URL.createObjectURL(croppedFile));
-      setIsCropping(false);
-      setImgSrc('');
-      setFaceCheckState('idle');
-    }, 'image/png', 1);
+    const blob = await compressCanvasToBlob(canvas);
+    const ext = blob.type === 'image/jpeg' ? 'jpg' : 'png';
+    const croppedFile = new File([blob], `profile_photo.${ext}`, { type: blob.type });
+    onChange(croppedFile);
+    setPreview(URL.createObjectURL(croppedFile));
+    setIsCropping(false);
+    setImgSrc('');
+    setFaceCheckState('idle');
   }, [onChange]);
 
   const handleDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragOver(false); handleFileChange(e.dataTransfer.files?.[0] || null); }, [handleFileChange]);
@@ -386,7 +448,7 @@ export default function ImageUpload({ label, error, onChange, value }: ImageUplo
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold text-neutral-800">{isDragOver ? 'Drop your image here!' : 'Upload Picture'}</h3>
                 <p className="text-neutral-500">Drag and drop or <span className="text-primary-500 font-medium">click to browse</span></p>
-                <p className="text-xs text-neutral-400">Supports: JPG, PNG, GIF (Max 10MB)</p>
+                <p className="text-xs text-neutral-400">JPG, PNG, GIF • Large images auto-compressed to 5 MB</p>
               </div>
             </div>
           )}

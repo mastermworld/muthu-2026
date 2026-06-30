@@ -101,7 +101,7 @@ const surveySchema = z.object({
   profilePicture: z
     .instanceof(File)
     .refine((f) => f.size > 0, "Profile picture is required.")
-    .refine((f) => f.size <= 5 * 1024 * 1024, "Max file size is 5 MB.")
+    .refine((f) => f.size <= 5 * 1024 * 1024, "File could not be compressed below 5 MB. Please use a smaller image.")
     .optional()
     .nullable(),
 });

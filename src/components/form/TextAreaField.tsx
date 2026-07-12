@@ -12,6 +12,8 @@ interface TextAreaFieldProps {
   rows?: number;
   onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   language?: string;
+  /** Characters matching this pattern are stripped from the value in real-time (handles typing AND paste). */
+  inputFilter?: RegExp;
 }
 
 export default function TextAreaField({
@@ -23,7 +25,18 @@ export default function TextAreaField({
   rows = 4,
   onKeyDown,
   language = "english",
+  inputFilter,
 }: TextAreaFieldProps) {
+  const reg = register(name);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (inputFilter) {
+      const filtered = e.target.value.replace(inputFilter, "");
+      if (filtered !== e.target.value) e.target.value = filtered;
+    }
+    reg.onChange(e);
+  };
+
   return (
     <div className="w-full group">
       <label htmlFor={name} className="block text-neutral-700 font-semibold mb-2 text-sm">
@@ -32,7 +45,8 @@ export default function TextAreaField({
       <div className="relative">
         <textarea
           id={name}
-          {...register(name)}
+          {...reg}
+          onChange={handleChange}
           placeholder={placeholder}
           rows={rows}
           onKeyDown={onKeyDown}

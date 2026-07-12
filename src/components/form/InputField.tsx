@@ -12,6 +12,8 @@ interface InputFieldProps {
   uppercase?: boolean;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   language?: string;
+  /** Characters matching this pattern are stripped from the value in real-time (handles typing AND paste). */
+  inputFilter?: RegExp;
 }
 
 export default function InputField({
@@ -24,15 +26,17 @@ export default function InputField({
   uppercase,
   onKeyDown,
   language = "english",
+  inputFilter,
 }: InputFieldProps) {
   const reg = register(name);
 
-  const handleChange = uppercase
-    ? (e: React.ChangeEvent<HTMLInputElement>) => {
-        e.target.value = e.target.value.toUpperCase();
-        reg.onChange(e);
-      }
-    : reg.onChange;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    if (inputFilter) val = val.replace(inputFilter, "");
+    if (uppercase) val = val.toUpperCase();
+    e.target.value = val;
+    reg.onChange(e);
+  };
 
   return (
     <div className="w-full group">

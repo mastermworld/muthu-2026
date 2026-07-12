@@ -54,50 +54,128 @@ const translations: Translations = {
   postalCode: { english: "Postal Code", tamil: "அஞ்சல் குறியீடு" },
 };
 
+// ─── Shared validation helpers ────────────────────────────────────────────────
+// Allow English letters, spaces, dots, and hyphens only.
+const NAME_CHARS = /^[a-zA-Z\s.\-]+$/;
+
+// Detect classic SQL-injection signatures without false-positives on normal text:
+//   --         SQL line comment
+//   /* */      SQL block comment
+//   UNION SELECT / UNION ALL SELECT
+//   ' OR … / ' AND …  (boolean-based injection)
+//   OR 1=1 / AND 1=1   (tautology)
+//   ' followed by a SQL DML/DDL keyword
+const SQL_INJECTION =
+  /(--|\/\*|\*\/|\bUNION\s+(ALL\s+)?SELECT\b|'\s*(OR|AND)\s*[\w'"(]|\bOR\b\s+\d+\s*=\s*\d+|\bAND\b\s+\d+\s*=\s*\d+|'\s*(?:SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC(?:UTE)?|TRUNCATE)\b)/i;
+const noSql = (v: string) => !SQL_INJECTION.test(v);
+const SQL_MSG = "Input contains invalid characters.";
+
 // ─── Zod Schema ──────────────────────────────────────────────────────────────
 const surveySchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
-  fatherName: z.string().optional(),
-  motherName: z.string().optional(),
+  // ── Name fields: letters (English + Tamil) only ──────────────────────────
+  fullName: z
+    .string()
+    .min(2, "Full name must be at least 2 characters")
+    .max(100, "Full name must be at most 100 characters")
+    .regex(NAME_CHARS, "Full name may only contain letters, spaces, dots and hyphens")
+    .refine(noSql, SQL_MSG),
+
+  fatherName: z
+    .string()
+    .max(100, "Father's name must be at most 100 characters")
+    .refine((v) => v === "" || NAME_CHARS.test(v), "Father's name may only contain letters, spaces, dots and hyphens")
+    .refine((v) => v === "" || noSql(v), SQL_MSG)
+    .optional(),
+
+  motherName: z
+    .string()
+    .max(100, "Mother's name must be at most 100 characters")
+    .refine((v) => v === "" || NAME_CHARS.test(v), "Mother's name may only contain letters, spaces, dots and hyphens")
+    .refine((v) => v === "" || noSql(v), SQL_MSG)
+    .optional(),
+
+  // ── Select fields ────────────────────────────────────────────────────────
   gender: z.string().min(1, "You must select an option"),
   mobileAreaCode: z.string().min(1, "You must select an option"),
-  mobile: z.string().regex(/^\d{6,15}$/, "Please enter a valid phone number"),
+
+  // ── Phone fields: digits only ────────────────────────────────────────────
+  mobile: z
+    .string()
+    .regex(/^\d{6,15}$/, "Phone number must contain digits only (6–15 digits)"),
+
   altMobileAreaCode: z.string().optional(),
-  altMobile: z.string().optional().refine(
-    (v) => !v || /^\d{6,15}$/.test(v),
-    "Please enter a valid phone number"
-  ),
-  email: z.string().email("Please enter a valid email address"),
-  birthdate: z.string()
+
+  altMobile: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^\d{6,15}$/.test(v),
+      "Phone number must contain digits only (6–15 digits)"
+    ),
+
+  // ── Email ────────────────────────────────────────────────────────────────
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .max(254, "Email must be at most 254 characters")
+    .refine(noSql, SQL_MSG),
+
+  // ── Date ─────────────────────────────────────────────────────────────────
+  birthdate: z
+    .string()
     .min(1, "Please select your date of birth")
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Please select a valid date")
-    .refine((v) => {
-      const date = new Date(v);
-      return !isNaN(date.getTime());
-    }, "Please enter a valid date")
+    .refine((v) => !isNaN(new Date(v).getTime()), "Please enter a valid date")
     .refine((v) => new Date(v) <= new Date(), "Date of birth cannot be in the future")
     .refine((v) => new Date(v).getFullYear() >= 1900, "Year must be 1900 or later"),
+
   maritalStatus: z.string().min(1, "You must select an option"),
   bloodGroup: z.string().optional(),
+
+  // ── Location ─────────────────────────────────────────────────────────────
   country: z.string().min(1, "You must select an option"),
   state: z.string().min(1, "You must select an option"),
   district: z.string().optional(),
   taluk: z.string().optional(),
   village: z.string().optional(),
-  postalCode: z.string().optional().refine(
-    (v) => !v || /^\d{4,10}$/.test(v),
-    "Please enter a valid postal code"
-  ),
-  address: z.string().min(10, "Address must be at least 10 characters"),
+
+  // Postal code: digits only
+  postalCode: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^\d{4,10}$/.test(v),
+      "Postal code must contain digits only (4–10 digits)"
+    ),
+
+  // ── Free-text fields: length-limited + SQL injection check ───────────────
+  address: z
+    .string()
+    .min(10, "Address must be at least 10 characters")
+    .max(500, "Address must be at most 500 characters")
+    .refine(noSql, SQL_MSG),
+
   education: z.string().min(1, "You must select an option"),
   jobType: z.string().min(1, "You must select an option"),
-  jobDescription: z.string().min(5, "Job description must be at least 5 characters"),
+
+  jobDescription: z
+    .string()
+    .min(5, "Job description must be at least 5 characters")
+    .max(300, "Job description must be at most 300 characters")
+    .refine(noSql, SQL_MSG),
+
   economicStatus: z.string().min(1, "You must select an option"),
   physicallyChallenged: z.string().min(1, "You must select an option"),
   orphan: z.string().min(1, "You must select an option"),
   volunteering: z.string().min(1, "You must select an option"),
   interests: z.array(z.string()).optional(),
-  referrer: z.string().optional(),
+
+  referrer: z
+    .string()
+    .max(200, "Referrer must be at most 200 characters")
+    .refine((v) => v === "" || noSql(v), SQL_MSG)
+    .optional(),
+
   profilePicture: z
     .instanceof(File)
     .refine((f) => f.size > 0, "Profile picture is required.")
@@ -465,6 +543,15 @@ function SubmissionErrorPopup({
   );
 }
 
+// ─── Input filter patterns ────────────────────────────────────────────────────
+// Strip everything that is not a Latin letter, a plain space, a dot, or a hyphen.
+const NAME_INPUT_FILTER = /[^a-zA-Z .\-]/g;
+// Strip everything that is not a digit.
+const DIGITS_INPUT_FILTER = /[^\d]/g;
+// Strip non-printable-ASCII and non-ASCII characters (blocks Tamil, emoji, etc.)
+// Keeps: space (0x20) through tilde (0x7E) and newline (for textareas).
+const FREE_TEXT_INPUT_FILTER = /[^\x20-\x7E\n]/g;
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SurveyForm() {
   const { language } = useLanguage();
@@ -517,6 +604,18 @@ export default function SurveyForm() {
     setValue("district", loc.district || "");
     setValue("taluk", loc.taluk || "");
     setValue("village", loc.village || "");
+  };
+
+  // Inline phone inputs are raw <input> elements so their onChange must be
+  // overridden here rather than through the InputField inputFilter prop.
+  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = e.target.value.replace(DIGITS_INPUT_FILTER, "");
+    register("mobile").onChange(e);
+  };
+
+  const handleAltMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = e.target.value.replace(DIGITS_INPUT_FILTER, "");
+    register("altMobile").onChange(e);
   };
 
   const handleKeyDown = (
@@ -743,6 +842,7 @@ export default function SurveyForm() {
                   error={errors.fullName}
                   placeholder={language === "tamil" ? "உங்கள் முழு பெயர்" : "Enter your full name"}
                   uppercase
+                  inputFilter={NAME_INPUT_FILTER}
                   onKeyDown={handleKeyDown}
                   language={language}
                 />
@@ -765,6 +865,7 @@ export default function SurveyForm() {
                   error={errors.fatherName}
                   placeholder={language === "tamil" ? "தந்தையின் பெயர்" : "Enter father's name"}
                   uppercase
+                  inputFilter={NAME_INPUT_FILTER}
                   onKeyDown={handleKeyDown}
                 />
 
@@ -775,6 +876,7 @@ export default function SurveyForm() {
                   error={errors.motherName}
                   placeholder={language === "tamil" ? "தாயின் பெயர்" : "Enter mother's name"}
                   uppercase
+                  inputFilter={NAME_INPUT_FILTER}
                   onKeyDown={handleKeyDown}
                 />
 
@@ -805,6 +907,7 @@ export default function SurveyForm() {
                   error={errors.referrer}
                   placeholder={language === "tamil" ? "பரிந்துரைத்தவர் பெயர்" : "Enter referrer's name"}
                   uppercase
+                  inputFilter={NAME_INPUT_FILTER}
                   onKeyDown={handleKeyDown}
                 />
 
@@ -850,6 +953,7 @@ export default function SurveyForm() {
                       type="tel"
                       inputMode="numeric"
                       {...register("mobile")}
+                      onChange={handleMobileChange}
                       placeholder={language === "tamil" ? "மொபைல் & வாட்ஸ்அப் எண்" : "Mobile & WhatsApp number"}
                       onKeyDown={handleKeyDown}
                       className={`flex-1 px-4 py-3 bg-white border rounded-lg text-neutral-800 font-medium placeholder:text-neutral-400 focus:outline-none focus:ring-2 transition-all ${errors.mobile
@@ -887,6 +991,7 @@ export default function SurveyForm() {
                       type="tel"
                       inputMode="numeric"
                       {...register("altMobile")}
+                      onChange={handleAltMobileChange}
                       placeholder={language === "tamil" ? "மாற்று மொபைல் எண்" : "Alternative number"}
                       onKeyDown={handleKeyDown}
                       className={`flex-1 px-4 py-3 bg-white border rounded-lg text-neutral-800 font-medium placeholder:text-neutral-400 focus:outline-none focus:ring-2 transition-all ${errors.altMobile
@@ -909,6 +1014,7 @@ export default function SurveyForm() {
                   register={register}
                   error={errors.email}
                   placeholder={language === "tamil" ? "மின்னஞ்சல் முகவரி" : "your@email.com"}
+                  inputFilter={FREE_TEXT_INPUT_FILTER}
                   onKeyDown={handleKeyDown}
                   language={language}
                 />
@@ -935,6 +1041,7 @@ export default function SurveyForm() {
                   register={register}
                   error={errors.postalCode}
                   placeholder={language === "tamil" ? "அஞ்சல் குறியீடு (விரும்பினால்)" : "Postal / PIN code (optional)"}
+                  inputFilter={DIGITS_INPUT_FILTER}
                   onKeyDown={handleKeyDown}
                   language={language}
                 />
@@ -950,6 +1057,7 @@ export default function SurveyForm() {
                     : "Door no., street, city, postal code"
                 }
                 rows={3}
+                inputFilter={FREE_TEXT_INPUT_FILTER}
                 onKeyDown={handleKeyDown}
                 language={language}
               />
@@ -991,6 +1099,7 @@ export default function SurveyForm() {
                     : "Briefly describe your current job or occupation"
                 }
                 rows={3}
+                inputFilter={FREE_TEXT_INPUT_FILTER}
                 onKeyDown={handleKeyDown}
                 language={language}
               />

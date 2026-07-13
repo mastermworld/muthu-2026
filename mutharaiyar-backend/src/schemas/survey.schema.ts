@@ -81,16 +81,33 @@ export const surveySchema = z.object({
       .refine((v) => !v || /^\d{4,10}$/.test(v), 'Postal code must contain digits only (4–10 digits)')
       .optional(),
 
-    // ── Location sub-fields ──────────────────────────────────────────────────
+    // ── Current address sub-fields ───────────────────────────────────────────
     district: z.string().optional(),
     taluk: z.string().optional(),
     village: z.string().optional(),
 
-    // ── Free-text fields: length-limited + SQL injection check ───────────────
     address: z
       .string({ required_error: 'Address is required' })
       .min(10, 'Address must be at least 10 characters')
       .max(500, 'Address must be at most 500 characters')
+      .refine(noSql, SQL_MSG),
+
+    // ── Native address ───────────────────────────────────────────────────────
+    nativeCountry: z.string({ required_error: 'Native country is required' }).min(1, 'Native country is required'),
+    nativeState: z.string({ required_error: 'Native state is required' }).min(1, 'Native state is required'),
+    nativeDistrict: z.string().optional(),
+    nativeTaluk: z.string().optional(),
+    nativeVillage: z.string().optional(),
+
+    nativePostalCode: z
+      .string()
+      .refine((v) => !v || /^\d{4,10}$/.test(v), 'Postal code must contain digits only (4–10 digits)')
+      .optional(),
+
+    nativeAddress: z
+      .string({ required_error: 'Native address is required' })
+      .min(10, 'Native address must be at least 10 characters')
+      .max(500, 'Native address must be at most 500 characters')
       .refine(noSql, SQL_MSG),
 
     jobDescription: z

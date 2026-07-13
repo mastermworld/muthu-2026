@@ -132,14 +132,13 @@ const surveySchema = z.object({
   maritalStatus: z.string().min(1, "You must select an option"),
   bloodGroup: z.string().optional(),
 
-  // ── Location ─────────────────────────────────────────────────────────────
+  // ── Current Address ───────────────────────────────────────────────────────
   country: z.string().min(1, "You must select an option"),
   state: z.string().min(1, "You must select an option"),
   district: z.string().optional(),
   taluk: z.string().optional(),
   village: z.string().optional(),
 
-  // Postal code: digits only
   postalCode: z
     .string()
     .optional()
@@ -148,11 +147,31 @@ const surveySchema = z.object({
       "Postal code must contain digits only (4–10 digits)"
     ),
 
-  // ── Free-text fields: length-limited + SQL injection check ───────────────
   address: z
     .string()
     .min(10, "Address must be at least 10 characters")
     .max(500, "Address must be at most 500 characters")
+    .refine(noSql, SQL_MSG),
+
+  // ── Native Address ────────────────────────────────────────────────────────
+  nativeCountry: z.string().min(1, "You must select an option"),
+  nativeState: z.string().min(1, "You must select an option"),
+  nativeDistrict: z.string().optional(),
+  nativeTaluk: z.string().optional(),
+  nativeVillage: z.string().optional(),
+
+  nativePostalCode: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^\d{4,10}$/.test(v),
+      "Postal code must contain digits only (4–10 digits)"
+    ),
+
+  nativeAddress: z
+    .string()
+    .min(10, "Native address must be at least 10 characters")
+    .max(500, "Native address must be at most 500 characters")
     .refine(noSql, SQL_MSG),
 
   education: z.string().min(1, "You must select an option"),
@@ -561,6 +580,12 @@ export default function SurveyForm() {
     country?: string; state?: string; district?: string; taluk?: string; village?: string;
   }>({ country: "india", state: "tamilnadu", district: "", taluk: "", village: "" });
 
+  const [nativeLocationData, setNativeLocationData] = useState<{
+    country?: string; state?: string; district?: string; taluk?: string; village?: string;
+  }>({ country: "india", state: "tamilnadu", district: "", taluk: "", village: "" });
+
+  const [nativeSameAsCurrent, setNativeSameAsCurrent] = useState(false);
+
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
@@ -573,7 +598,7 @@ export default function SurveyForm() {
 
   const {
     register, handleSubmit, formState: { errors },
-    setValue, reset, control, setError,
+    setValue, reset, control, setError, watch,
   } = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
     defaultValues: {
@@ -585,6 +610,9 @@ export default function SurveyForm() {
       maritalStatus: "", bloodGroup: "",
       country: "india", state: "tamilnadu",
       district: "", taluk: "", village: "", postalCode: "", address: "",
+      nativeCountry: "india", nativeState: "tamilnadu",
+      nativeDistrict: "", nativeTaluk: "", nativeVillage: "",
+      nativePostalCode: "", nativeAddress: "",
       education: "", jobType: "", jobDescription: "",
       economicStatus: "",
       physicallyChallenged: "",
@@ -605,6 +633,37 @@ export default function SurveyForm() {
     setValue("taluk", loc.taluk || "");
     setValue("village", loc.village || "");
   };
+
+  const handleNativeLocationChange = (loc: typeof nativeLocationData) => {
+    setNativeLocationData(loc);
+    setValue("nativeCountry", loc.country || "");
+    setValue("nativeState", loc.state || "");
+    setValue("nativeDistrict", loc.district || "");
+    setValue("nativeTaluk", loc.taluk || "");
+    setValue("nativeVillage", loc.village || "");
+  };
+
+  // When the "same as current" checkbox is on, mirror current address → native in real time.
+  const watchedAddress     = watch("address");
+  const watchedPostalCode  = watch("postalCode");
+  React.useEffect(() => {
+    if (!nativeSameAsCurrent) return;
+    const loc = {
+      country:  locationData.country  || "",
+      state:    locationData.state    || "",
+      district: locationData.district || "",
+      taluk:    locationData.taluk    || "",
+      village:  locationData.village  || "",
+    };
+    setNativeLocationData(loc);
+    setValue("nativeCountry",  loc.country);
+    setValue("nativeState",    loc.state);
+    setValue("nativeDistrict", loc.district);
+    setValue("nativeTaluk",    loc.taluk);
+    setValue("nativeVillage",  loc.village);
+    setValue("nativePostalCode", watchedPostalCode || "");
+    setValue("nativeAddress",    watchedAddress    || "");
+  }, [nativeSameAsCurrent, locationData, watchedAddress, watchedPostalCode, setValue]);
 
   // Inline phone inputs are raw <input> elements so their onChange must be
   // overridden here rather than through the InputField inputFilter prop.
@@ -660,6 +719,8 @@ export default function SurveyForm() {
       setShowSuccessPopup(true);
       reset();
       setLocationData({ country: "india", state: "tamilnadu", district: "", taluk: "", village: "" });
+      setNativeLocationData({ country: "india", state: "tamilnadu", district: "", taluk: "", village: "" });
+      setNativeSameAsCurrent(false);
       setSelectedInterests([]);
     },
     onError: (error: Error & { field?: string; statusCode?: number }) => {
@@ -688,9 +749,12 @@ export default function SurveyForm() {
       email: isT ? "மின்னஞ்சல்" : "Email Address",
       birthdate: isT ? "பிறந்த தேதி" : "Date of Birth",
       maritalStatus: isT ? "திருமண நிலை" : "Marital Status",
-      country: isT ? "நாடு" : "Country",
-      state: isT ? "மாநிலம்" : "State / Province",
-      address: isT ? "முகவரி" : "Address",
+      country: isT ? "தற்போதைய நாடு" : "Current Country",
+      state: isT ? "தற்போதைய மாநிலம்" : "Current State",
+      address: isT ? "தற்போதைய முகவரி" : "Current Address",
+      nativeCountry: isT ? "சொந்த நாடு" : "Native Country",
+      nativeState: isT ? "சொந்த மாநிலம்" : "Native State",
+      nativeAddress: isT ? "சொந்த முகவரி" : "Native Address",
       education: isT ? "கல்வித் தகுதி" : "Education Level",
       jobType: isT ? "வேலை வகை" : "Job Type",
       jobDescription: isT ? "வேலை விவரம்" : "Job Description",
@@ -716,6 +780,7 @@ export default function SurveyForm() {
       "fullName", "gender", "fatherName", "motherName", "birthdate", "maritalStatus", "bloodGroup",
       "mobileAreaCode", "mobile", "altMobile", "email",
       "country", "state", "postalCode", "address",
+      "nativeCountry", "nativeState", "nativePostalCode", "nativeAddress",
       "education", "jobType", "jobDescription",
       "economicStatus", "physicallyChallenged", "orphan", "volunteering",
     ];
@@ -1021,8 +1086,12 @@ export default function SurveyForm() {
               </div>
             </div>
 
-            {/* ── Section 4: Address ────────────────────────────────────── */}
+            {/* ── Section 4a: Current Address ───────────────────────────── */}
             <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 md:p-8">
+              <h2 className="text-base font-bold text-neutral-700 mb-4 flex items-center gap-2">
+                <span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-primary-500 to-accent-500 inline-block" />
+                {language === "tamil" ? "தற்போதைய முகவரி" : "Current Address"}
+              </h2>
 
               <LocationDropdowns
                 value={locationData}
@@ -1061,6 +1130,84 @@ export default function SurveyForm() {
                 onKeyDown={handleKeyDown}
                 language={language}
               />
+            </div>
+
+            {/* ── Section 4b: Native Address ────────────────────────────── */}
+            <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6 md:p-8">
+              {/* Header + checkbox */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                <h2 className="text-base font-bold text-neutral-700 flex items-center gap-2">
+                  <span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-secondary-500 to-primary-500 inline-block" />
+                  {language === "tamil" ? "சொந்த முகவரி" : "Native Address"}
+                </h2>
+                <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={nativeSameAsCurrent}
+                      onChange={(e) => setNativeSameAsCurrent(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 rounded border-2 border-neutral-300 bg-white peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-colors flex items-center justify-center">
+                      {nativeSameAsCurrent && (
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-neutral-600 group-hover:text-neutral-800 transition-colors">
+                    {language === "tamil"
+                      ? "சொந்த முகவரி, தற்போதைய முகவரியோடு ஒன்றா?"
+                      : "Native address same as current address?"}
+                  </span>
+                </label>
+              </div>
+
+              {/* All native fields — disabled + greyed out when checkbox is on */}
+              <fieldset
+                disabled={nativeSameAsCurrent}
+                className={nativeSameAsCurrent ? "opacity-60 pointer-events-none" : ""}
+              >
+                <LocationDropdowns
+                  value={nativeLocationData}
+                  onChange={handleNativeLocationChange}
+                  required={!nativeSameAsCurrent}
+                  disabled={nativeSameAsCurrent}
+                  className="mb-6"
+                  errors={{
+                    country: errors.nativeCountry ? (language === "tamil" ? "நீங்கள் ஒரு விருப்பத்தை தேர்ந்தெடுக்க வேண்டும்." : errors.nativeCountry.message) : undefined,
+                    state: errors.nativeState ? (language === "tamil" ? "நீங்கள் ஒரு விருப்பத்தை தேர்ந்தெடுக்க வேண்டும்." : errors.nativeState.message) : undefined,
+                  }}
+                />
+                <div className="mb-6">
+                  <InputField
+                    label={language === "tamil" ? "சொந்த அஞ்சல் குறியீடு (விரும்பினால்)" : "Native Postal / PIN Code (optional)"}
+                    name="nativePostalCode"
+                    register={register}
+                    error={errors.nativePostalCode}
+                    placeholder={language === "tamil" ? "அஞ்சல் குறியீடு" : "Postal / PIN code"}
+                    inputFilter={DIGITS_INPUT_FILTER}
+                    onKeyDown={handleKeyDown}
+                    language={language}
+                  />
+                </div>
+                <TextAreaField
+                  label={language === "tamil" ? "சொந்த முகவரி" : "Native Address"}
+                  name="nativeAddress"
+                  register={register}
+                  error={errors.nativeAddress}
+                  placeholder={
+                    language === "tamil"
+                      ? "தெரு, நகரம், அஞ்சல் குறியீடு உள்ளிட்ட முழு முகவரி"
+                      : "Door no., street, city, postal code"
+                  }
+                  rows={3}
+                  inputFilter={FREE_TEXT_INPUT_FILTER}
+                  onKeyDown={handleKeyDown}
+                  language={language}
+                />
+              </fieldset>
             </div>
 
             {/* ── Section 5: Career & Education ────────────────────────── */}

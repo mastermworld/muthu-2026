@@ -38,6 +38,14 @@ model Survey {
   postalCode String?
   address    String   @db.Text
 
+  nativeCountry    String?
+  nativeState      String?
+  nativeDistrict   String?
+  nativeTaluk      String?
+  nativeVillage    String?
+  nativePostalCode String?
+  nativeAddress    String?  @db.Text
+
   education       String
   jobType         String
   jobDescription  String   @db.Text
